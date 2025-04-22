@@ -32,7 +32,6 @@ def get_secrets():
             return json.loads(secret)
     except ClientError as e:
         print(f"Error retrieving secrets: {e}")
-        # ใช้ค่าดีฟอลต์ในกรณีที่เกิดข้อผิดพลาด (ไม่แนะนำในการใช้งานจริง)
 
 
 # ดึงค่า Secrets
