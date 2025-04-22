@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/equipment.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโก้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                
+                <!-- User -->
+                <div class="user">
+                    {% if session.username %}
+                        <a href="{{ url_for('profile') }}">
+                            <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                        </a>
+                        <div class="username">
+                            <a href="{{ url_for('profile') }}">{{ session.username }}</a>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="equipment-list">
+            <h1>Equipment</h1>
+            <div class="equipment-grid">
+                <!-- ตัวอย่างอุปกรณ์ -->
+                <div class="equipment-card">
+                    <img src="{{ url_for('static', filename='images/EOS200D.png') }}" alt="EOS200D" style="width: 300px; height: 200px;"/>
+                    <h2>Cameras</h2>
+                    <a href="{{ url_for('details_camera') }}" class="details-button">View Details</a>
+                </div>                
+                <!-- <div class="equipment-card">
+                    <img src="{{ url_for('static', filename='images/Speedlite.png') }}" alt="Speedlite" />
+                    <h2>Accessories</h2>
+                    <p>Status: <span class="status not-available">Not Available</span> - 0 Left</p>
+                    <a href="{{ url_for('details_accessories') }}" class="details-button">View Details</a>
+                </div>
+                <div class="equipment-card">
+                    <img src="{{ url_for('static', filename='images/RF24mm.png') }}" alt="Lens" />
+                    <h2>Lenses Cameras</h2>
+                    <p>Status: <span class="status available">Available</span> - 3 Left</p>
+                    <a href="{{ url_for('details_lenses') }}" class="details-button">View Details</a>
+                </div> -->
+            </div>
+        </section>
+    </main>
+    
+    <!--Javascripts-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationIcon = document.getElementById("notification-icon");
+            const notificationDropdown = document.getElementById("notification-dropdown");
+        
+            notificationIcon.addEventListener("click", function (event) {
+                event.preventDefault();
+                // Toggle the visibility of the dropdown
+                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
+                    notificationDropdown.style.display = "block";
+                } else {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        
+            // Close the dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        });
+    </script>
+        
+</body>
+</html>

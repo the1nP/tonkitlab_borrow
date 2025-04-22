@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_list.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโก้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('admin_req') }}">Request</a></li>
+                <!-- <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li> -->
+                <li><a href="{{ url_for('admin_list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                <!-- User -->
+                <div class="user">
+                    <a href="{{ url_for('profile') }}">
+                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                    </a>
+                    <div class="username">
+                        <a href="{{ url_for('profile') }}">admin</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="list">
+            <h1>List</h1>
+    
+            <!-- Borrowed equipment table -->
+            <div class="list-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>User</th>
+                            <th>Borrow Date</th>
+                            <th>Item</th>
+                            <th>Status</th>
+                            <th>Return Date</th>
+                            <th>Request Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ record.user_id }}</td>
+                            <td>{{ record.record_date }}</td>
+                            <td>{{ record.equipment_name }}</td>
+                            <td>{{ record.status }}</td>
+                            <td>{{ record.due_date }}</td>
+                            <td>{{ record.type }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+</body>
+</html>

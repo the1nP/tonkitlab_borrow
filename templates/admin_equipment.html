@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_equipment.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโก้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('admin_req') }}">Request</a></li>
+                <!-- <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li> -->
+                <li><a href="{{ url_for('admin_list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                <!-- User -->
+                <div class="user">
+                    <a href="{{ url_for('profile') }}">
+                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                    </a>
+                    <div class="username">
+                        <a href="{{ url_for('profile') }}">admin</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="equipment-list">
+            <h1>Equipment</h1>
+            <div class="equipment-grid">
+                <!-- ตัวอย่างอุปกรณ์ -->
+                <div class="equipment-card">
+                    <img src="{{ url_for('static', filename='images/EOS200D.png') }}" alt="EOS200D" />
+                    <h2>Cameras</h2>
+                    <a href="{{ url_for('admin_camera') }}" class="details-button">View Details</a>
+                </div>                
+                <div class="equipment-card">
+                    <img src="{{ url_for('static', filename='images/Speedlite.png') }}" alt="Speedlite" />
+                    <h2>Accessories</h2>
+                    <p>Status: <span class="status not-available">Not Available</span> - 0 Left</p>
+                    <a href="{{ url_for('admin_accessories') }}" class="details-button">View Details</a>
+                </div>
+                <div class="equipment-card">
+                    <img src="{{ url_for('static', filename='images/RF24mm.png') }}" alt="Lens" />
+                    <h2>Lenses Cameras</h2>
+                    <p>Status: <span class="status available">Available</span> - 3 Left</p>
+                    <a href="{{ url_for('admin_lenses') }}" class="details-button">View Details</a>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

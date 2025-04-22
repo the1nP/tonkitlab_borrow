@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detailslenses.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโก้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                <!--Notification-->
+                <div class="notification">
+                    <a href="#" id="notification-icon"><img src="{{ url_for('static', filename='images/bell.png') }}" alt="Notification Bell" /></a>
+                    <div class="notification-badge">3</div> <!-- ตัวเลขแจ้งเตือน -->
+                        <!-- Dropdown Notifications -->
+                        <div class="notification-dropdown" id="notification-dropdown">
+                        <h4>Notifications</h4>
+                        <ul>
+                        <li>Your equipment loan is due tomorrow.</li>
+                        <li>Equipment XYZ is overdue!</li>
+                        <li>Reminder: Return equipment ABC today.</li>
+                        </ul>
+                        </div>
+                </div>
+                <!-- User -->
+                <div class="user">
+                    <a href="{{ url_for('profile') }}">
+                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                    </a>
+                    <div class="username">
+                        <a href="{{ url_for('profile') }}">Username</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="equipment-details">
+            <h1>Lenses Cameras</h1>
+    
+            <!-- ข้อมูลกล้องในรูปแบบตาราง -->
+            <div class="equipment-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Quantity Left</th>
+                            <th>Due Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>EF-S18-135mm f/3.5-5.6 IS USM</td>
+                            <td style="color: red;">Not Available</td>
+                            <td>1</td>
+                            <td>25 November 2024</td>
+                            <td><button class="action-button" disabled>Borrow</button></td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>EF-S10-18mm f/4.5-5.6 IS STM</td>
+                            <td style="color: green;">Available</td>
+                            <td>2</td>
+                            <td>-</td>
+                            <td><button class="action-button">Borrow</button></td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>EF-S10-22mm f/3.5-4.5 USM</td>
+                            <td style="color: green;">Available</td>
+                            <td>1</td>
+                            <td>-</td>
+                            <td><button class="action-button">Borrow</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+
+    <!--Javascripts-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationIcon = document.getElementById("notification-icon");
+            const notificationDropdown = document.getElementById("notification-dropdown");
+        
+            notificationIcon.addEventListener("click", function (event) {
+                event.preventDefault();
+                // Toggle the visibility of the dropdown
+                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
+                    notificationDropdown.style.display = "block";
+                } else {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        
+            // Close the dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        });
+    </script>
+        
+</body>
+</html>

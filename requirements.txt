@@ -1,0 +1,8 @@
+Flask
+boto3
+botocore
+pytz
+Werkzeug
+Jinja2
+itsdangerous
+click

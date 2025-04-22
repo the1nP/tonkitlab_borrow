@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/detailsaccessories.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโก้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('admin_req') }}">Request</a></li>
+                <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('admin_list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                <!-- User -->
+                <div class="user">
+                    <a href="{{ url_for('profile') }}">
+                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                    </a>
+                    <div class="username">
+                        <a href="{{ url_for('profile') }}">Username</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="equipment-details">
+            <h1>Accessories</h1>
+    
+            <!-- ข้อมูลกล้องในรูปแบบตาราง -->
+            <div class="equipment-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No.</th>
+                            <th>Model</th>
+                            <th>Status</th>
+                            <th>Quantity Left</th>
+                            <th>Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>USB Power Adapter PD-E2</td>
+                            <td style="color: red;">Not Available</td>
+                            <td>0</td>
+                            <td>3 December 2024</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Speedlite EL-10</td>
+                            <td style="color: red;">Not Available</td>
+                            <td>0</td>
+                            <td>25 November 2024</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Speedlite EL-5</td>
+                            <td style="color: red;">Not Available</td>
+                            <td>0</td>
+                            <td>1 December 2024</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>AC Adapter AC-E6N</td>
+                            <td style="color: red;">Not Available</td>
+                            <td>0</td>
+                            <td>29 November 2024</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Battery Charger LC-E12E</td>
+                            <td style="color: red;">Not Available</td>
+                            <td>0</td>
+                            <td>30 November 2024</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    
+</body>
+</html>

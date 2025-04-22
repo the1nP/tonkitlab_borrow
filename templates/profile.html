@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโก้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                <!-- User -->
+                <div class="user">
+                    {% if session.username %}
+                        <a href="{{ url_for('profile') }}">
+                            <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                        </a>
+                        <div class="username">
+                            <a href="{{ url_for('profile') }}">{{ session.username }}</a>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="profile">
+            <h1>Profile</h1>
+            <p>Username: {{ user_info.username }}</p>
+            <p>Full Name: {{ user_info.fullname }}</p>
+            <p>Email: {{ user_info.email }}</p>
+            <p>Phone: {{ user_info.phone }}</p>
+            <p>Faculty: {{ user_info.faculty }}</p>
+            <p>Student ID: {{ user_info.student_id }}</p>
+            <p>Club Member: {{ user_info.club_member }}</p>
+            <p>Date of Birth: {{ user_info.dob }}</p>
+        </section>
+    </main>
+
+    <!--Javascripts-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationIcon = document.getElementById("notification-icon");
+            const notificationDropdown = document.getElementById("notification-dropdown");
+        
+            notificationIcon.addEventListener("click", function (event) {
+                event.preventDefault();
+                // Toggle the visibility of the dropdown
+                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
+                    notificationDropdown.style.display = "block";
+                } else {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        
+            // Close the dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        });
+        </script>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <script>
+              if ('{{ category }}' == 'success') {
+                Swal.fire({
+                  icon: 'success',
+                  title: '{{ message }}',
+                  text: 'Welcome to ToolTrack!',
+                  showCancelButton: true,
+                  confirmButtonText: 'Go to Equipment',
+                  cancelButtonText: 'Go to My Profile',
+                  reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ url_for('equipment') }}";
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        Swal.close();
+                    }
+                });
+              } else if ('{{ category }}' == 'error') {
+                  Swal.fire({
+                      icon: 'error',
+                      title: '{{ message }}',
+                      showConfirmButton: true
+                  })
+              }
+             
+              
+          </script>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+</body>
+</html>

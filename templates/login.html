@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('list') }}">List</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="login-container">
+            <h1>Log In</h1>
+            <form method="POST" action="{{ url_for('login') }}">
+                <!-- Email -->
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Username" required>
+                <!-- Password -->
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+
+                <button type="submit">Log In</button>
+            </form>
+            <div class="links">
+                <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+            </div>
+        </section>
+    </main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <script>
+          if ('{{ category }}' == 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: '{{ message }}',
+              text: 'Welcome,',
+              showCancelButton: true,
+              confirmButtonText: 'Go to Homepage',
+              cancelButtonText: 'Go to My Profile',
+              reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "{{ url_for('home') }}";
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    window.location.href = "{{ url_for('profile') }}";
+                }
+            });
+          } else if ('{{ category }}' == 'error') {
+              Swal.fire({
+                  icon: 'error',
+                  title: '{{ message }}',
+                  showConfirmButton: true
+              })
+          } else if ('{{ category }}' == 'info') {
+              Swal.fire({
+                  icon: 'info',
+                  title: '{{ message }}',
+                  showConfirmButton: true
+              })
+          }
+         
+          
+      </script>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+</body>
+
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโก้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                <!-- User -->
+                <div class="user">
+                    {% if session.username %}
+                        <a href="{{ url_for('profile') }}">
+                            <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                        </a>
+                        <div class="username">
+                            <a href="{{ url_for('profile') }}">{{ session.username }}</a>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+           <main>
+        <!-- Section: List -->
+        <section class="list-container">
+            <h1>List</h1>
+            <table class="equipment-list">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Date Recorded</th>
+                        <th>Model</th>
+                        <th>Status</th>
+                        <th>Return Date</th>
+                        <th>Action</th>
+                        <th>Request Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ record.record_date }}</td>
+                        <td>{{ record.equipment_name }}</td>
+                        <td>{{ record.status }}</td>
+                        <td>{{ record.due_date }}</td>
+                        <td>
+                            <form action="/return" method="post">
+                                <input type="hidden" name="record_id" value="{{ record.record_id }}">
+                                <input type="hidden" name="user_id" value="{{ record.user_id }}">
+                                <input type="hidden" name="equipment_id" value="{{ record.equipment_id }}">
+                                <input type="hidden" name="equipment_name" value="{{ record.equipment_name }}">
+                                <input type="hidden" name="record_date" value="{{ record.record_date }}">
+                                <input type="hidden" name="due_date" value="{{ record.due_date }}">
+                                <button type="submit" class="return-btn" {% if record.status != 'approved' %}disabled{% endif %}>Return</button>
+                            </form>
+                        <td>{{ record.type }}</td>
+                        <tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!--Javascripts-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationIcon = document.getElementById("notification-icon");
+            const notificationDropdown = document.getElementById("notification-dropdown");
+        
+            notificationIcon.addEventListener("click", function (event) {
+                event.preventDefault();
+                // Toggle the visibility of the dropdown
+                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
+                    notificationDropdown.style.display = "block";
+                } else {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        
+            // Close the dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+            
+        });
+    </script>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <script>
+          if ('{{ category }}' == 'success') {
+            Swal.fire({
+                  icon: 'success',
+                  title: '{{ message }}',
+                  showConfirmButton: true
+              })
+          } else if ('{{ category }}' == 'error') {
+              Swal.fire({
+                  icon: 'error',
+                  title: '{{ message }}',
+                  showConfirmButton: true
+              })
+          } else if ('{{ category }}' == 'info') {
+              Swal.fire({
+                  icon: 'info',
+                  title: '{{ message }}',
+                  showConfirmButton: true
+              })
+          }
+          
+         
+          
+      </script>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+</body>
+</html>

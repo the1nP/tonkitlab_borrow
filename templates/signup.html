@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/signup.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <!-- โลโ���้ -->
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <!-- เมนู -->
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('list') }}">List</a></li>
+            </ul>
+            <!-- Username -->
+            <div class="user-section">
+                <!--Notification-->
+                <div class="notification">
+                    <a href="#" id="notification-icon"><img src="{{ url_for('static', filename='image/bell.png') }}" alt="Notification Bell" /></a>
+                    <div class="notification-badge">3</div> <!-- ตัวเลขแจ้งเตือน -->
+                        <!-- Dropdown Notifications -->
+                        <div class="notification-dropdown" id="notification-dropdown">
+                        <h4>Notifications</h4>
+                        <ul>
+                        <li>Your equipment loan is due tomorrow.</li>
+                        <li>Equipment XYZ is overdue!</li>
+                        <li>Reminder: Return equipment ABC today.</li>
+                        </ul>
+                        </div>
+                </div>
+                <!-- User -->
+                <div class="user">
+                    <a href="{{ url_for('profile') }}">
+                        <img src="{{ url_for('static', filename='image/profile.png') }}" alt="Profile" />
+                    </a>
+                    <div class="username">
+                        <a href="{{ url_for('profile') }}">Username</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        <section class="signup-container">
+            <h1>Sign Up</h1>
+            <form action="{{ url_for('signup') }}" method="POST" enctype="multipart/form-data">
+                <label for="fullname">Full Name</label>
+                <input type="text" id="fullname" name="fullname" placeholder="Full Name" required>
+            
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Email Address" required>
+            
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Username" required>
+            
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm Password" required>
+            
+                <label for="faculty">Faculty</label>
+                <input type="text" id="faculty" name="faculty" placeholder="Faculty" required>
+            
+                <label for="student-id">Student ID</label>
+                <input type="text" id="student-id" name="student-id" placeholder="Student ID" required>
+            
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+            
+                <label for="club-member">Are you a club member?</label>
+                <select id="club-member" name="club-member" required>
+                    <option value="" disabled selected>Select</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            
+                <label for="dob">Date of Birth</label>
+                <input type="date" id="dob" name="dob" required>
+            
+                <label for="profile-pic">Profile Picture</label>
+                <input type="file" id="profile-pic" name="profile-pic">
+            
+                <button type="submit">Sign Up</button>
+            </form>
+            
+            <div class="links">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+            </div>
+        </section>
+    </main>
+    
+    <!--Javascripts-->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const notificationIcon = document.getElementById("notification-icon");
+            const notificationDropdown = document.getElementById("notification-dropdown");
+        
+            notificationIcon.addEventListener("click", function (event) {
+                event.preventDefault();
+                // Toggle the visibility of the dropdown
+                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
+                    notificationDropdown.style.display = "block";
+                } else {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        
+            // Close the dropdown when clicking outside
+            document.addEventListener("click", function (event) {
+                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
+                    notificationDropdown.style.display = "none";
+                }
+            });
+        });
+    </script>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <script>
+          if ('{{ category }}' == 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: '{{ message }}',
+              text: 'SignUp Ok',
+              showCancelButton: true,
+              confirmButtonText: 'Go to Homepage',
+              cancelButtonText: 'Go to My Profile',
+              reverseButtons: true
+            })
+          } else if ('{{ category }}' == 'error') {
+              Swal.fire({
+                  icon: 'error',
+                  title: '{{ message }}',
+                  showConfirmButton: true
+              })
+          }
+         
+          
+      </script>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+</body>
+</html>
