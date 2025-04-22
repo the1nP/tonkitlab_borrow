@@ -153,5 +153,141 @@
         {% endfor %}
     {% endif %}
     {% endwith %}
+        <!-- เพิ่มสคริปต์นี้ก่อนปิด body tag -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form[action="{{ url_for("signup") }}"]');
+            
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                
+                const formData = new FormData(form);
+                
+                fetch('{{ url_for("signup") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // แสดง SweetAlert สำหรับการใส่ OTP
+                        showOtpVerification();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An unexpected error occurred. Please try again.'
+                    });
+                });
+            });
+            
+            function showOtpVerification() {
+                Swal.fire({
+                    title: 'Email Verification',
+                    html: `
+                        <p>We've sent a verification code to your email.</p>
+                        <input type="text" id="otp" class="swal2-input" placeholder="Enter verification code">
+                    `,
+                    showCancelButton: true,
+                    confirmButtonText: 'Verify',
+                    cancelButtonText: 'Resend Code',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        const otp = document.getElementById('otp').value;
+                        if (!otp) {
+                            Swal.showValidationMessage('Please enter verification code');
+                            return false;
+                        }
+                        
+                        return fetch('{{ url_for("verify_otp") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ code: otp })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'error') {
+                                throw new Error(data.message);
+                            }
+                            return data;
+                        })
+                        .catch(error => {
+                            Swal.showValidationMessage(error.message || 'Verification failed');
+                            return false;
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed && result.value.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Account verified!',
+                            text: 'Your account has been verified successfully.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Go to Login',
+                            cancelButtonText: 'Stay here'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = '{{ url_for("login") }}';
+                            }
+                        });
+                    } else if (result.dismiss === Swal.DismissReason.cancel) {
+                        // ถ้าผู้ใช้กดปุ่ม "Resend Code"
+                        resendVerificationCode();
+                    }
+                });
+            }
+            
+            function resendVerificationCode() {
+                fetch('{{ url_for("resend_otp") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Code Sent',
+                            text: 'We have sent a new verification code to your email.',
+                            timer: 3000
+                        }).then(() => {
+                            showOtpVerification();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message
+                        }).then(() => {
+                            showOtpVerification();
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to resend verification code. Please try again.'
+                    }).then(() => {
+                        showOtpVerification();
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>

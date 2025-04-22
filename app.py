@@ -234,16 +234,70 @@ def signup():
                     {'Name': 'custom:role', 'Value': 'user'}
                 ]
             )
-            flash('You have successfully signed up!', 'success')
-            return redirect(url_for('signup'))
+            # เก็บ username ไว้ใน session เพื่อใช้ในการยืนยัน
+            session['temp_username'] = username
+            # ส่งการแจ้งเตือนเพื่อขอรหัส OTP ผ่าน SweetAlert
+            return jsonify({'status': 'success', 'message': 'Please enter verification code sent to your email'})
         except ClientError as e:
             error_message = e.response['Error']['Message']
             print(f"Error: {error_message}")
-            flash(error_message, 'error')
-            return redirect(url_for('signup'))
+            return jsonify({'status': 'error', 'message': error_message})
+      
 
     return render_template('signup.html')
 
+@app.route('/verify-otp', methods=['POST'])
+def verify_otp():
+    try:
+        data = request.get_json()
+        verification_code = data.get('code')
+        username = session.get('temp_username')
+
+        if not username:
+            return jsonify({'status': 'error', 'message': 'Session expired. Please sign up again.'})
+
+        secret_hash = get_secret_hash(username, APP_CLIENT_ID, CLIENT_SECRET)
+        
+        # ยืนยันการลงทะเบียน
+        cognito.confirm_sign_up(
+            ClientId=APP_CLIENT_ID,
+            Username=username,
+            ConfirmationCode=verification_code,
+            SecretHash=secret_hash
+        )
+        
+        # ลบ username ชั่วคราวจาก session
+        session.pop('temp_username', None)
+        
+        return jsonify({'status': 'success', 'message': 'Your account has been verified successfully!'})
+    except ClientError as e:
+        error_message = e.response['Error']['Message']
+        print(f"Error: {error_message}")
+        return jsonify({'status': 'error', 'message': error_message})
+
+@app.route('/resend-otp', methods=['POST'])
+def resend_otp():
+    try:
+        username = session.get('temp_username')
+        
+        if not username:
+            return jsonify({'status': 'error', 'message': 'Session expired. Please sign up again.'})
+            
+        secret_hash = get_secret_hash(username, APP_CLIENT_ID, CLIENT_SECRET)
+        
+        # เรียกใช้ API เพื่อส่งรหัสยืนยันใหม่
+        cognito.resend_confirmation_code(
+            ClientId=APP_CLIENT_ID,
+            Username=username,
+            SecretHash=secret_hash
+        )
+        
+        return jsonify({'status': 'success', 'message': 'Verification code has been resent to your email'})
+    except ClientError as e:
+        error_message = e.response['Error']['Message']
+        print(f"Error: {error_message}")
+        return jsonify({'status': 'error', 'message': error_message})
+    
 @app.route('/signup-success')
 def signup_success():
     return "Signup successful! Please verify your email."
