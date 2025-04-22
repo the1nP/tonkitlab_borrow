@@ -201,6 +201,10 @@
                     confirmButtonText: 'Verify',
                     cancelButtonText: 'Resend Code',
                     showLoaderOnConfirm: true,
+                    allowOutsideClick: false,  // Prevent clicking outside
+                    allowEscapeKey: false,     // Prevent closing with Escape key
+                    allowEnterKey: false,      // Prevent closing with Enter key
+
                     preConfirm: () => {
                         const otp = document.getElementById('otp').value;
                         if (!otp) {
@@ -227,7 +231,6 @@
                             return false;
                         });
                     },
-                    allowOutsideClick: () => !Swal.isLoading()
                 }).then((result) => {
                     if (result.isConfirmed && result.value.status === 'success') {
                         Swal.fire({
