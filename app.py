@@ -123,7 +123,7 @@ def login():
                 ClientId=APP_CLIENT_ID
             )
 
-             # ตรวจสอบว่ามี ChallengeName หรือไม่
+            # ตรวจสอบว่ามี ChallengeName หรือไม่
             if 'ChallengeName' in response and response['ChallengeName'] == 'NEW_PASSWORD_REQUIRED':
                 session['username'] = username
                 session['session'] = response['Session']
@@ -327,13 +327,27 @@ def borrow_equipment(equipment_id):
 
         equipment_item = equipment['Item']
         equipment_name = equipment_item['Name']  # Get the Name attribute
-        print(equipment_item)
+        is_member_required = equipment_item.get('isMemberRequired', 'no')  # Default to 'no' if not specified
 
-        # Step 2: Calculate the new due date (one week from today)
+        # Step 2: Retrieve user details from Cognito
+        access_token = session.get('access_token')
+        if not access_token:
+            return jsonify(success=False, message="User not logged in"), 401
+
+        user_response = cognito.get_user(AccessToken=access_token)
+        user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
+        club_member = user_attributes.get('custom:club_member', 'no')  # Default to 'no' if not specified
+
+        # Step 3: Check if the user is allowed to borrow the equipment
+        if is_member_required == 'yes' and club_member != 'yes':
+            return jsonify(success=False, message="This equipment is restricted to members only"), 403
+
+        # Step 4: Calculate the new due date (one week from today)
         local_tz = pytz.timezone('Asia/Bangkok')  # Replace with your local timezone
         now = datetime.now(local_tz)
         due_date = (now + timedelta(weeks=1)).strftime('%Y-%m-%d %H:%M:%S')
-        # Step 3: Update the equipment status to Pending
+
+        # Step 5: Update the equipment status to Pending
         EquipmentTable.update_item(
             Key={'EquipmentID': equipment_id},
             UpdateExpression="set #s = :s",
@@ -341,7 +355,8 @@ def borrow_equipment(equipment_id):
             ExpressionAttributeValues={':s': 'Pending'},
             ReturnValues="UPDATED_NEW"
         )
-        # Step 4: Insert a new record into BorrowReturnRecords
+
+        # Step 6: Insert a new record into BorrowReturnRecords
         record_id = str(uuid.uuid4())
         user_id = session.get('username')  # Assuming user_id is stored in session
         record_date = now.strftime('%Y-%m-%d %H:%M:%S')
@@ -360,10 +375,13 @@ def borrow_equipment(equipment_id):
             }
         )
         return jsonify(success=True)
+    except ClientError as e:
+        error_message = e.response['Error']['Message']
+        print(f"Error: {error_message}")
+        return jsonify(success=False, message=error_message), 500
     except Exception as e:
         print(f"Error: {e}")
-        return jsonify(success=False), 500
-
+        return jsonify(success=False, message="An unexpected error occurred"), 500
 @app.route('/details_accessories')
 def details_accessories():
     response = EquipmentTable.scan(
