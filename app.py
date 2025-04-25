@@ -314,8 +314,10 @@ def details_camera():
         FilterExpression=Attr('Category').eq('Camera')
     )
     items = response['Items']
-    print(items)
-    return render_template('detailscamera.html',items=items)
+    # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
+    for item in items:
+        item['isMemberRequired'] = item.get('isMemberRequired', 'no')  # ค่าเริ่มต้นเป็น 'no' ถ้าไม่มีฟิลด์นี้
+    return render_template('detailscamera.html', items=items)
 
 @app.route('/borrow/<equipment_id>', methods=['POST'])
 def borrow_equipment(equipment_id):
