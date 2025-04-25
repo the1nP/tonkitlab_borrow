@@ -46,14 +46,40 @@
     <main>
         <section class="profile">
             <h1>Profile</h1>
-            <p>Username: {{ user_info.username }}</p>
-            <p>Full Name: {{ user_info.fullname }}</p>
-            <p>Email: {{ user_info.email }}</p>
-            <p>Phone: {{ user_info.phone }}</p>
-            <p>Faculty: {{ user_info.faculty }}</p>
-            <p>Student ID: {{ user_info.student_id }}</p>
-            <p>Club Member: {{ user_info.club_member }}</p>
-            <p>Date of Birth: {{ user_info.dob }}</p>
+            <table class="profile-table">
+                <tr>
+                    <th>Username</th>
+                    <td>{{ user_info.username }}</td>
+                </tr>
+                <tr>
+                    <th>Full Name</th>
+                    <td>{{ user_info.fullname }}</td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>{{ user_info.email }}</td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td>{{ user_info.phone }}</td>
+                </tr>
+                <tr>
+                    <th>Faculty</th>
+                    <td>{{ user_info.faculty }}</td>
+                </tr>
+                <tr>
+                    <th>Student ID</th>
+                    <td>{{ user_info.student_id }}</td>
+                </tr>
+                <tr>
+                    <th>Club Member</th>
+                    <td>{{ user_info.club_member }}</td>
+                </tr>
+                <tr>
+                    <th>Date of Birth</th>
+                    <td>{{ user_info.dob }}</td>
+                </tr>
+            </table>
         </section>
     </main>
 

@@ -248,3 +248,33 @@ ul.menu li a:hover {
 .login-button:hover {
     background-color: #45a049;
 }
+
+.profile-table {
+    margin: 0 auto;
+    border-collapse: collapse;
+    width: 80%;
+    max-width: 600px;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: #333;
+    text-align: left;
+}
+
+.profile-table th, .profile-table td {
+    border: 1px solid #ddd;
+    padding: 10px 15px;
+}
+
+.profile-table th {
+    background-color: #91766E;
+    color: white;
+    text-align: left;
+}
+
+.profile-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.profile-table tr:hover {
+    background-color: #f1f1f1;
+}
