@@ -193,6 +193,26 @@ main {
     cursor: not-allowed;
 }
 
+.logout-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #ff4b5c;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+ }
+ 
+ .logout-button:hover {
+    background-color: #ff1f3a;
+ }
+ 
 /* Responsive Design */
 @media (max-width: 768px) {
     ul.menu {

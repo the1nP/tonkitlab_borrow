@@ -1,0 +1,147 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f9f9;
+}
+
+header {
+    background-color: #91766E;
+    padding: 10px 20px;
+    color: white;
+}
+
+nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+ul.menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 20px;
+}
+
+ul.menu li {
+    display: inline-block;
+}
+
+ul.menu li a {
+    text-decoration: none;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 10px 15px;
+    transition: background-color 0.3s ease;
+}
+
+ul.menu li a:hover {
+    background-color: #75554E;
+    border-radius: 5px;
+}
+
+.user-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.username a {
+    text-decoration: none;
+    font-size: 16px;
+    color: white;
+    font-weight: bold;
+}
+
+.logout-button {
+    text-decoration: none;
+    font-size: 14px;
+    color: white;
+    background-color: #d9534f;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #c9302c;
+}
+
+/* Add Equipment Section */
+.add-equipment {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-equipment h1 {
+    text-align: center;
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.add-equipment .form-description {
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.add-equipment form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input,
+.form-group select {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.form-group input::placeholder {
+    color: #aaa;
+}
+
+.submit-button {
+    background-color: #91766E;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #75554E;
+}

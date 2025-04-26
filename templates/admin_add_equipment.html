@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Equipment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_add_equipment.css') }}">
+</head>
+
+<body>
+    <!-- เมนู -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
+            </div>
+            <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li>
+                <li><a href="{{ url_for('admin_req') }}">Request</a></li>
+                <li><a href="{{ url_for('admin_list') }}">List</a></li>
+            </ul>
+            <div class="user-section">
+                <div class="user">
+                    <a href="{{ url_for('profile') }}">
+                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                    </a>
+                    <div class="username">
+                        <a href="{{ url_for('profile') }}">{{ session.get('username', 'Admin') }}</a>
+                    </div>
+                    <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- ฟอร์มเพิ่มอุปกรณ์ -->
+    <main>
+        <section class="add-equipment">
+            <h1>Add Equipment</h1>
+            <p class="form-description">Please fill out the form below to add a new equipment to the system.</p>
+            <form method="POST" action="{{ url_for('admin_add_equipment') }}">
+                <div class="form-group">
+                    <label for="name">Equipment Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Enter equipment name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category:</label>
+                    <select id="category" name="category" required>
+                        <option value="Cameras">Cameras</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Lenses">Lenses</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status" required>
+                        <option value="Available">Available</option>
+                        <option value="Not Available">Not Available</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" name="quantity" min="1" placeholder="Enter quantity" required>
+                </div>
+
+                <button type="submit" class="submit-button">Add Equipment</button>
+            </form>
+        </section>
+    </main>
+</body>
+
+</html>

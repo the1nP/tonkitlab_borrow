@@ -61,7 +61,30 @@ def get_secret_hash(username, client_id, client_secret):
 
 @app.route('/home', endpoint='home')
 def main_page():
-    return render_template('home.html')
+    username = session.get('username')
+    access_token = session.get('access_token')
+    if not username or not access_token:
+        flash('You need to log in first.', 'error')
+        return redirect(url_for('login'))
+    try:
+        # ดึงข้อมูลผู้ใช้จาก Cognito
+        response = cognito.get_user(
+            AccessToken=access_token
+        )
+        user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
+        role = user_attributes.get('custom:role')
+
+        # ตรวจสอบบทบาทของผู้ใช้
+        if role == 'admin':
+            return render_template('admin_home.html')
+        else:
+            return render_template('home.html')
+
+    except ClientError as e:
+        error_message = e.response['Error']['Message']
+        print(f"Error: {error_message}")
+        flash(error_message, 'error')
+        return redirect(url_for('login'))
 
 @app.route('/equipment', endpoint='equipment')
 def equipment_page():
@@ -88,18 +111,20 @@ def profile_page():
             'email': user_attributes.get('email'),
             'fullname': user_attributes.get('name'),
             'phone': user_attributes.get('phone_number'),
-            'faculty': user_attributes.get('custom:faculty'),
-            'student_id': user_attributes.get('custom:student_id'),
-            'club_member': user_attributes.get('custom:club_member'),
-            'dob': user_attributes.get('custom:dob')
         }
+
+        # ตรวจสอบว่าเป็นแอดมินหรือไม่
+        role = user_attributes.get('custom:role')
+        if role == 'admin':
+            return render_template('admin_profile.html', user_info=user_info)
+        else:
+            return render_template('profile.html', user_info=user_info)
+
     except ClientError as e:
         error_message = e.response['Error']['Message']
         print(f"Error: {error_message}")
         flash(error_message, 'error')
         return redirect(url_for('login'))
-
-    return render_template('profile.html', user_info=user_info)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -310,14 +335,18 @@ def logout():
 
 @app.route('/details_camera')
 def details_camera():
-    response = EquipmentTable.scan(
-        FilterExpression=Attr('Category').eq('Camera')
-    )
-    items = response['Items']
-    # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
-    for item in items:
-        item['isMemberRequired'] = item.get('isMemberRequired', 'no')  # ค่าเริ่มต้นเป็น 'no' ถ้าไม่มีฟิลด์นี้
-    return render_template('detailscamera.html', items=items)
+    try:
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq('Camera')
+        )
+        items = response['Items']
+        # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
+        for item in items:
+            item['isMemberRequired'] = item.get('isMemberRequired', 'no')  # ค่าเริ่มต้นเป็น 'no' ถ้าไม่มีฟิลด์นี้
+        return render_template('detailscamera.html', items=items)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
 
 @app.route('/borrow/<equipment_id>', methods=['POST'])
 def borrow_equipment(equipment_id):
@@ -395,7 +424,15 @@ def details_accessories():
 
 @app.route('/details_lenses')
 def details_lenses():
-    return render_template('detailslenses.html')
+    try:
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq('Lenses')
+        )
+        items = response['Items']
+        return render_template('detailslenses.html', items=items)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
 
 @app.route('/list', endpoint='list')
 def list_records():
@@ -564,19 +601,95 @@ def admin_list():
 
 @app.route('/admin_lenses')
 def admin_lenses():
-    return render_template('admin_lenses.html')
+    try:
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq('Lenses')
+        )
+        items = response['Items']
+        return render_template('admin_lenses.html', items=items)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
 
 @app.route('/admin_equipment')
 def admin_equipment():
-    return render_template('admin_equipment.html')
+    try:
+        # ดึงข้อมูลอุปกรณ์ทั้งหมดจาก DynamoDB
+        response = EquipmentTable.scan()
+        items = response['Items']
+        return render_template('admin_equipment.html', items=items)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
 
 @app.route('/admin_accessories')
 def admin_accessories():
-    return render_template('admin_accessories.html')
+    try:
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq('Accessories')
+        )
+        items = response['Items']
+        return render_template('admin_accessories.html', items=items)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
 
 @app.route('/admin_camera')
 def admin_camera():
-    return render_template('admin_camera.html')
+    try:
+        # ดึงข้อมูลจาก DynamoDB
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq('Cameras')
+        )
+        items = response['Items']
+        return render_template('admin_camera.html', items=items)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
+
+@app.route('/admin_add_equipment', methods=['GET', 'POST'])
+def admin_add_equipment():
+    if request.method == 'POST':
+        try:
+            # ตรวจสอบข้อมูลจากฟอร์ม
+            name = request.form.get('name')
+            category = request.form.get('category')
+            status = request.form.get('status')
+            quantity = request.form.get('quantity')
+
+            if not name or not category or not status or not quantity:
+                flash('All fields are required.', 'error')
+                return redirect(url_for('admin_add_equipment'))
+
+            # สร้าง ID อุปกรณ์แบบสุ่ม
+            equipment_id = str(uuid.uuid4())
+
+            # บันทึกข้อมูลลง DynamoDB
+            EquipmentTable.put_item(
+                Item={
+                    'EquipmentID': equipment_id,
+                    'Name': name,
+                    'Category': category,
+                    'Status': status,
+                    'Quantity': int(quantity)
+                }
+            )
+            flash('Equipment added successfully!', 'success')
+
+            # เปลี่ยนเส้นทางไปยังหน้ารายการอุปกรณ์ชนิดนั้น
+            if category == 'Cameras':
+                return redirect(url_for('admin_camera'))
+            elif category == 'Accessories':
+                return redirect(url_for('admin_accessories'))
+            elif category == 'Lenses':
+                return redirect(url_for('admin_lenses'))
+            else:
+                return redirect(url_for('admin_equipment'))
+        except Exception as e:
+            print(f"Error: {e}")
+            flash('Failed to add equipment. Please try again.', 'error')
+            return redirect(url_for('admin_add_equipment'))
+    return render_template('admin_add_equipment.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
