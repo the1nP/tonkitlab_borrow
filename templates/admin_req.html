@@ -13,26 +13,24 @@
 <body>
     <header>
         <nav>
-            <!-- โลโก้ -->
             <div class="logo">
                 <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
             </div>
-            <!-- เมนู -->
             <ul class="menu">
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li>
                 <li><a href="{{ url_for('admin_req') }}">Request</a></li>
-                <!-- <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li> -->
                 <li><a href="{{ url_for('admin_list') }}">List</a></li>
             </ul>
-            <!-- Username -->
             <div class="user-section">
-                <!-- User -->
                 <div class="user">
                     <a href="{{ url_for('profile') }}">
                         <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
                     </a>
                     <div class="username">
-                        <a href="{{ url_for('profile') }}">admin</a>
+                        <a href="{{ url_for('profile') }}">{{ session.get('username', 'Admin') }}</a>
                     </div>
+                    <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
                 </div>
             </div>
         </nav>
