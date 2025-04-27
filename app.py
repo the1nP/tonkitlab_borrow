@@ -651,44 +651,87 @@ def admin_camera():
 def admin_add_equipment():
     if request.method == 'POST':
         try:
-            # ตรวจสอบข้อมูลจากฟอร์ม
+            # ดึงข้อมูลจากฟอร์ม
             name = request.form.get('name')
             category = request.form.get('category')
             status = request.form.get('status')
-            quantity = request.form.get('quantity')
+            quantity = int(request.form.get('quantity'))
 
             if not name or not category or not status or not quantity:
                 flash('All fields are required.', 'error')
                 return redirect(url_for('admin_add_equipment'))
 
-            # สร้าง ID อุปกรณ์แบบสุ่ม
-            equipment_id = str(uuid.uuid4())
+            # ตรวจสอบว่ามีอุปกรณ์ที่ชื่อเดียวกันอยู่ใน DynamoDB หรือไม่
+            try:
+                response = EquipmentTable.scan(
+                    FilterExpression=Attr('Name').eq(name) & Attr('Category').eq(category)
+                )
+                items = response['Items']
 
-            # บันทึกข้อมูลลง DynamoDB
-            EquipmentTable.put_item(
-                Item={
-                    'EquipmentID': equipment_id,
-                    'Name': name,
-                    'Category': category,
-                    'Status': status,
-                    'Quantity': int(quantity)
-                }
-            )
-            flash('Equipment added successfully!', 'success')
+                if items:
+                    # หากมีอุปกรณ์ที่ชื่อเดียวกัน ให้อัพเดตจำนวน
+                    existing_item = items[0]
+                    current_quantity = int(existing_item.get('Quantity', 0))
+                    new_quantity = current_quantity + quantity
+                    print(f"Updating quantity from {current_quantity} to {new_quantity}")  # Debug print
 
-            # เปลี่ยนเส้นทางไปยังหน้ารายการอุปกรณ์ชนิดนั้น
-            if category == 'Cameras':
-                return redirect(url_for('admin_camera'))
-            elif category == 'Accessories':
-                return redirect(url_for('admin_accessories'))
-            elif category == 'Lenses':
-                return redirect(url_for('admin_lenses'))
-            else:
-                return redirect(url_for('admin_equipment'))
+                    try:
+                        # อัพเดตข้อมูลใน DynamoDB
+                        response = EquipmentTable.update_item(
+                            Key={
+                                'EquipmentID': existing_item['EquipmentID']
+                            },
+                            UpdateExpression='SET #qty = :new_qty, #st = :new_status',
+                            ExpressionAttributeNames={
+                                '#qty': 'Quantity',
+                                '#st': 'Status'
+                            },
+                            ExpressionAttributeValues={
+                                ':new_qty': new_quantity,
+                                ':new_status': 'Available' if new_quantity > 0 else 'Not Available'
+                            },
+                            ReturnValues="UPDATED_NEW"
+                        )
+                        flash(f"Updated quantity of {name} to {new_quantity}.", 'success')
+                    except Exception as update_error:
+                        print(f"Error updating item: {update_error}")
+                        raise update_error
+                else:
+                    # หากไม่มีอุปกรณ์ที่ชื่อเดียวกัน ให้เพิ่มรายการใหม่
+                    equipment_id = str(uuid.uuid4())
+                    EquipmentTable.put_item(
+                        Item={
+                            'EquipmentID': equipment_id,
+                            'Name': name,
+                            'Category': category,
+                            'Status': 'Available' if quantity > 0 else 'Not Available',
+                            'Quantity': quantity,
+                            'DueDate': '-',
+                            'BorrowerID': '-',
+                            'BorrowDate': '-'
+                        }
+                    )
+                    flash('Equipment added successfully!', 'success')
+
+                # เปลี่ยนเส้นทางไปยังหน้ารายการอุปกรณ์ตามหมวดหมู่
+                if category == 'Cameras':
+                    return redirect(url_for('admin_camera'))
+                elif category == 'Accessories':
+                    return redirect(url_for('admin_accessories'))
+                elif category == 'Lenses':
+                    return redirect(url_for('admin_lenses'))
+                else:
+                    return redirect(url_for('admin_equipment'))
+
+            except Exception as scan_error:
+                print(f"Error scanning table: {scan_error}")
+                raise scan_error
+
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error in admin_add_equipment: {e}")
             flash('Failed to add equipment. Please try again.', 'error')
             return redirect(url_for('admin_add_equipment'))
+
     return render_template('admin_add_equipment.html')
 
 if __name__ == '__main__':
