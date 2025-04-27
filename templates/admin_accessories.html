@@ -58,7 +58,9 @@
                         <tr>
                             <td>{{ loop.index }}</td>
                             <td>{{ item.Name }}</td>
-                            <td style="color: {{ 'green' if item.Status == 'Available' else 'red' }};">{{ item.Status }}</td>
+                            <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'red' }};">
+                                {{ item.StatusEquipment }}
+                            </td>
                             <td>{{ item.Quantity }}</td>
                             <td>{{ item.get('DueDate', '-') }}</td>
                             <td>

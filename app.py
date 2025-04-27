@@ -382,7 +382,7 @@ def borrow_equipment(equipment_id):
         EquipmentTable.update_item(
             Key={'EquipmentID': equipment_id},
             UpdateExpression="set #s = :s",
-            ExpressionAttributeNames={'#s': 'Status'},
+            ExpressionAttributeNames={'#s': 'StatusEquipment'},
             ExpressionAttributeValues={':s': 'Pending'},
             ReturnValues="UPDATED_NEW"
         )
@@ -524,69 +524,44 @@ def admin_req():
 @app.route('/approve/<reqType>/<equipment_name>/<equipment_id>/<user_id>/<record_id>', methods=['POST'])
 def approve_record(reqType,equipment_name, equipment_id, user_id,record_id):
     try:
-        print(user_id)
-        record_idNew = str(uuid.uuid4())
-        local_tz = pytz.timezone('Asia/Bangkok')  # Replace with your local timezone
-        now = datetime.now(local_tz)
+        # ...existing code...
         if reqType == 'borrow':
-            due_date = (now + timedelta(weeks=1)).strftime('%Y-%m-%d %H:%M:%S')
-            print(user_id)
             # Update the status in the Equipment table
             EquipmentTable.update_item(
                 Key={'EquipmentID': equipment_id},
-                UpdateExpression="set #s = :s, #u = :u , DueDate = :d , BorrowDate = :bd",
-                ExpressionAttributeNames={'#s': 'Status','#u': 'BorrowerID'},
-                ExpressionAttributeValues={':s': 'Not Available',':u': user_id , ':d': due_date , ':bd': now.strftime('%Y-%m-%d %H:%M:%S')},
+                UpdateExpression="set #s = :s, #u = :u, DueDate = :d, BorrowDate = :bd",
+                ExpressionAttributeNames={
+                    '#s': 'StatusEquipment',
+                    '#u': 'BorrowerID'
+                },
+                ExpressionAttributeValues={
+                    ':s': 'Not Available',
+                    ':u': user_id,
+                    ':d': due_date,
+                    ':bd': now.strftime('%Y-%m-%d %H:%M:%S')
+                },
                 ReturnValues="UPDATED_NEW"
-            )
-
-            # Update the status in the BorrowReturnRecords table
-            BorrowReturnRecordsTable.put_item(
-            Item={
-                'record_id': record_idNew,
-                'user_id': user_id,
-                'equipment_id': equipment_id,
-                'equipment_name': equipment_name,
-                'type': 'borrow',
-                'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
-                'due_date': due_date,
-                'status': 'approved',
-                'isApprovedYet': 'true'
-            }
-            )
-            BorrowReturnRecordsTable.update_item(
-                Key={'record_id': record_id},
-                UpdateExpression="SET isApprovedYet = :a",
-                ExpressionAttributeValues={':a': 'true'},
             )
         elif reqType == 'return':
             # Update the status in the Equipment table
             EquipmentTable.update_item(
                 Key={'EquipmentID': equipment_id},
                 UpdateExpression="set #s = :s, #d = :d, #borrowerId = :b, #borrowerDate = :bd",
-                ExpressionAttributeNames={'#s': 'Status','#d': 'DueDate' ,'#borrowerId': 'BorrowerID', '#borrowerDate': 'BorrowDate'},
-                ExpressionAttributeValues={':s': 'Available',':d': '-' , ':b': '-', ':bd': '-'},
+                ExpressionAttributeNames={
+                    '#s': 'StatusEquipment',
+                    '#d': 'DueDate',
+                    '#borrowerId': 'BorrowerID',
+                    '#borrowerDate': 'BorrowDate'
+                },
+                ExpressionAttributeValues={
+                    ':s': 'Available',
+                    ':d': '-',
+                    ':b': '-',
+                    ':bd': '-'
+                },
                 ReturnValues="UPDATED_NEW"
             )
-
-            BorrowReturnRecordsTable.put_item(
-            Item={
-                'record_id': record_idNew,
-                'user_id': user_id,
-                'equipment_id': equipment_id,
-                'equipment_name': equipment_name,
-                'type': 'return',
-                'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
-                'due_date': '-',
-                'status': 'approved',
-                'isApprovedYet': 'true'
-            }
-            )
-            BorrowReturnRecordsTable.update_item(
-                Key={'record_id': record_id},
-                UpdateExpression="SET isApprovedYet = :a",
-                ExpressionAttributeValues={':a': 'true'},
-            )
+        # ...rest of the code...
         return jsonify(success=True)
     except Exception as e:
         print(f"Error: {e}")
@@ -681,43 +656,31 @@ def admin_add_equipment():
                     existing_item = items[0]
                     current_quantity = int(existing_item.get('Quantity', 0))
                     new_quantity = current_quantity + quantity
+                    new_status = 'Available' if new_quantity > 0 else 'Not Available'
 
                     EquipmentTable.update_item(
                         Key={'EquipmentID': existing_item['EquipmentID']},
                         UpdateExpression='SET #qty = :new_qty, #st = :new_status, #member = :member_req',
                         ExpressionAttributeNames={
                             '#qty': 'Quantity',
-                            '#st': 'Status',
+                            '#st': 'StatusEquipment',
                             '#member': 'isMemberRequired'
                         },
                         ExpressionAttributeValues={
                             ':new_qty': new_quantity,
-                            ':new_status': 'Available' if new_quantity > 0 else 'Not Available',
+                            ':new_status': new_status,
                             ':member_req': isMemberRequired
                         }
                     )
-                    
-                    redirect_url = url_for('admin_camera') if category == 'Cameras' else \
-                                 url_for('admin_accessories') if category == 'Accessories' else \
-                                 url_for('admin_lenses') if category == 'Lenses' else \
-                                 url_for('admin_equipment')
-                    
-                    return jsonify({
-                        'success': True,
-                        'message': f'Success! Added {quantity} units to {name}.',
-                        'name': name,
-                        'quantity': new_quantity,
-                        'isUpdate': True,
-                        'redirect': redirect_url
-                    })
                 else:
                     equipment_id = str(uuid.uuid4())
+                    initial_status = 'Available' if quantity > 0 else 'Not Available'
                     EquipmentTable.put_item(
                         Item={
                             'EquipmentID': equipment_id,
                             'Name': name,
                             'Category': category,
-                            'Status': 'Available' if quantity > 0 else 'Not Available',
+                            'StatusEquipment': initial_status,
                             'Quantity': quantity,
                             'DueDate': '-',
                             'BorrowerID': '-',

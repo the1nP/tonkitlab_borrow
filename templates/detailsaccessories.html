@@ -80,7 +80,9 @@
                         <tr data-equipment-id="{{ item.EquipmentID }}">
                             <td>{{ loop.index }}</td>
                             <td>{{ item.Name }}</td>
-                            <td style="color: {{ 'green' if item.Status == 'Available' else 'yellow' if item.Status == 'Pending' else 'red' }};">{{ item.Status }}</td>
+                            <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'yellow' if item.StatusEquipment == 'Pending' else 'red' }};">
+                                {{ item.StatusEquipment }}
+                            </td>
                             <td>{{ item.Quantity }}</td>
                             <td>{{ item.DueDate if item.DueDate else '-' }}</td>
                             <td>
