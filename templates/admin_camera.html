@@ -50,6 +50,7 @@
                             <th>Status</th>
                             <th>Quantity Left</th>
                             <th>Due Date</th>
+                            <th>Member Only</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -60,6 +61,13 @@
                             <td style="color: {{ 'green' if item.Status == 'Available' else 'red' }};">{{ item.Status }}</td>
                             <td>{{ item.Quantity }}</td>
                             <td>{{ item.get('DueDate', '-') }}</td>
+                            <td>
+                                {% if item.isMemberRequired == 'yes' %}
+                                    <span class="icon-check">&#10004;</span>
+                                {% else %}
+                                    <span class="icon-cross">&#10008;</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

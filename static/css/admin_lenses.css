@@ -203,17 +203,16 @@ main {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.equipment-table th, .equipment-table td {
-    padding: 15px;
+.equipment-table th, 
+.equipment-table td {
+    padding: 12px;
     text-align: center;
-    border: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
 }
 
 .equipment-table th {
     background-color: #91766E;
-    color: #F6ECE3;
-    font-size: 18px;
-    font-weight: bold;
+    color: white;
 }
 
 .equipment-table td {
@@ -260,6 +259,20 @@ main {
  .logout-button:hover {
     background-color: #ff1f3a;
  }
+
+/* สไตล์สำหรับเครื่องหมายถูก */
+.icon-check {
+    color: green;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* สไตล์สำหรับเครื่องหมายกากบาท */
+.icon-cross {
+    color: red;
+    font-weight: bold;
+    font-size: 16px;
+}
  
 /* Responsive Design */
 @media (max-width: 768px) {
