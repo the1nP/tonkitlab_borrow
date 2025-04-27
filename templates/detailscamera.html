@@ -69,8 +69,9 @@
                             <th>No.</th>
                             <th>Model</th>
                             <th>Status</th>
+                            <th>Quantity</th>
                             <th>Due Date</th>
-                            <th>Member Only</th> <!-- เพิ่มคอลัมน์ใหม่ -->
+                            <th>Member Only</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -80,12 +81,13 @@
                             <td>{{ loop.index }}</td>
                             <td>{{ item.Name }}</td>
                             <td style="color: {{ 'green' if item.Status == 'Available' else 'yellow' if item.Status == 'Pending' else 'red' }};">{{ item.Status }}</td>
+                            <td>{{ item.Quantity }}</td>
                             <td>{{ item.DueDate if item.DueDate else '-' }}</td>
                             <td>
                                 {% if item.isMemberRequired == 'yes' %}
-                                    <span class="icon-check">&#10004;</span> <!-- เครื่องหมายถูก -->
+                                    <span class="icon-check">&#10004;</span>
                                 {% else %}
-                                    <span class="icon-cross">&#10008;</span> <!-- เครื่องหมายกากบาท -->
+                                    <span class="icon-cross">&#10008;</span>
                                 {% endif %}
                             </td>
                             <td>

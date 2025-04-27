@@ -68,6 +68,7 @@
                             <th>No.</th>
                             <th>Model</th>
                             <th>Status</th>
+                            <th>Quantity</th>
                             <th>Due Date</th>
                             <th>Member Only</th>
                             <th>Action</th>
@@ -78,9 +79,8 @@
                         <tr data-equipment-id="{{ item.EquipmentID }}">
                             <td>{{ loop.index }}</td>
                             <td>{{ item.Name }}</td>
-                            <td style="color: {{ 'green' if item.Status == 'Available' else 'yellow' if item.Status == 'Pending' else 'red' }};">
-                                {{ item.Status }}
-                            </td>
+                            <td style="color: {{ 'green' if item.Status == 'Available' else 'yellow' if item.Status == 'Pending' else 'red' }};">{{ item.Status }}</td>
+                            <td>{{ item.Quantity }}</td>
                             <td>{{ item.DueDate if item.DueDate else '-' }}</td>
                             <td>
                                 {% if item.isMemberRequired == 'yes' %}
@@ -90,11 +90,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="action-button" 
-                                        {% if item.Status != 'Available' %}disabled{% endif %}
-                                        onclick="borrowEquipment('{{ item.EquipmentID }}')">
-                                    Borrow
-                                </button>
+                                <button class="action-button" {% if item.Status != 'Available' %}disabled{% endif %}>Borrow</button>
                             </td>
                         </tr>
                         {% endfor %}
