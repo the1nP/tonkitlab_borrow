@@ -79,10 +79,13 @@
                                 <input type="hidden" name="equipment_name" value="{{ record.equipment_name }}">
                                 <input type="hidden" name="record_date" value="{{ record.record_date }}">
                                 <input type="hidden" name="due_date" value="{{ record.due_date }}">
-                                <button type="submit" class="return-btn" {% if record.status != 'approved' %}disabled{% endif %}>Return</button>
+                                <button type="submit" class="return-btn" 
+                                        {% if not (record.StatusReq == 'Approved' and record.RequestType == 'borrow') %}disabled{% endif %}>
+                                    Return
+                                </button>
                             </form>
-    
-                        <tr>
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
