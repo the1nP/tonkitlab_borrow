@@ -508,47 +508,57 @@ def admin_req():
 @app.route('/approve/<reqType>/<equipment_name>/<equipment_id>/<user_id>/<record_id>', methods=['POST'])
 def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
     try:
-        # ...existing code...
+        local_tz = pytz.timezone('Asia/Bangkok')
+        now = datetime.now(local_tz)
+        borrow_date = now.strftime('%Y-%m-%d %H:%M:%S')
+        due_date = (now + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 
-        # อัพเดต StatusReq และ RequestType ใน BorrowReturnRecords
+        # อัพเดต StatusReq, RequestType และ due_date ใน BorrowReturnRecords
         BorrowReturnRecordsTable.update_item(
             Key={'record_id': record_id},
-            UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, RequestType = :r",
+            UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, RequestType = :r, due_date = :d, record_date = :bd",
             ExpressionAttributeValues={
                 ':s': 'Approved',
                 ':a': 'true',
-                ':r': reqType  # 'borrow' หรือ 'return'
+                ':r': reqType,
+                ':d': due_date,
+                ':bd': borrow_date
             }
         )
 
-        # อัพเดตจำนวนและ StatusEquipment ใน Equipment
+        # อัพเดตจำนวน, StatusEquipment และ due_date ใน Equipment
         equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
         if 'Item' in equipment:
             current_quantity = int(equipment['Item'].get('Quantity', 0))
             
             if reqType == 'borrow':
                 new_quantity = current_quantity - 1
-            elif reqType == 'return':  # เพิ่มเงื่อนไขสำหรับการคืน
-                # หาจำนวนที่ยืมไปจากประวัติการยืม
-                borrow_history = BorrowReturnRecordsTable.scan(
-                    FilterExpression=
-                        Attr('equipment_id').eq(equipment_id) & 
-                        Attr('user_id').eq(user_id) & 
-                        Attr('type').eq('borrow') &
-                        Attr('StatusReq').eq('Approved')
+                # อัพเดตข้อมูลการยืม
+                EquipmentTable.update_item(
+                    Key={'EquipmentID': equipment_id},
+                    UpdateExpression="SET Quantity = :q, StatusEquipment = :s, due_date = :d, BorrowDate = :bd, BorrowerID = :uid",
+                    ExpressionAttributeValues={
+                        ':q': new_quantity,
+                        ':s': 'Available' if new_quantity > 0 else 'Not Available',
+                        ':d': due_date,
+                        ':bd': borrow_date,
+                        ':uid': user_id
+                    }
                 )
-                if 'Items' in borrow_history and len(borrow_history['Items']) > 0:
-                    borrowed_quantity = 1  # จำนวนที่ยืมไป (default = 1)
-                    new_quantity = current_quantity + borrowed_quantity
-
-            EquipmentTable.update_item(
-                Key={'EquipmentID': equipment_id},
-                UpdateExpression="SET Quantity = :q, StatusEquipment = :s",
-                ExpressionAttributeValues={
-                    ':q': new_quantity,
-                    ':s': 'Available' if new_quantity > 0 else 'Not Available'
-                }
-            )
+            elif reqType == 'return':
+                # ...existing return logic...
+                new_quantity = current_quantity + 1
+                EquipmentTable.update_item(
+                    Key={'EquipmentID': equipment_id},
+                    UpdateExpression="SET Quantity = :q, StatusEquipment = :s, due_date = :d, BorrowDate = :bd, BorrowerID = :uid",
+                    ExpressionAttributeValues={
+                        ':q': new_quantity,
+                        ':s': 'Available' if new_quantity > 0 else 'Not Available',
+                        ':d': '-',
+                        ':bd': '-',
+                        ':uid': '-'
+                    }
+                )
 
         return jsonify(success=True)
     except Exception as e:
