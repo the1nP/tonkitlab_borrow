@@ -662,10 +662,10 @@ def admin_add_equipment():
         try:
             name = request.form.get('name')
             category = request.form.get('category')
-            status = request.form.get('status')
+            isMemberRequired = request.form.get('isMemberRequired')
             quantity = int(request.form.get('quantity'))
 
-            if not name or not category or not status or not quantity:
+            if not name or not category or not isMemberRequired or not quantity:
                 return jsonify({
                     'success': False,
                     'message': 'All fields are required.'
@@ -684,14 +684,16 @@ def admin_add_equipment():
 
                     EquipmentTable.update_item(
                         Key={'EquipmentID': existing_item['EquipmentID']},
-                        UpdateExpression='SET #qty = :new_qty, #st = :new_status',
+                        UpdateExpression='SET #qty = :new_qty, #st = :new_status, #member = :member_req',
                         ExpressionAttributeNames={
                             '#qty': 'Quantity',
-                            '#st': 'Status'
+                            '#st': 'Status',
+                            '#member': 'isMemberRequired'
                         },
                         ExpressionAttributeValues={
                             ':new_qty': new_quantity,
-                            ':new_status': 'Available' if new_quantity > 0 else 'Not Available'
+                            ':new_status': 'Available' if new_quantity > 0 else 'Not Available',
+                            ':member_req': isMemberRequired
                         }
                     )
                     
@@ -700,7 +702,6 @@ def admin_add_equipment():
                                  url_for('admin_lenses') if category == 'Lenses' else \
                                  url_for('admin_equipment')
                     
-                    # สำหรับการอัพเดตอุปกรณ์ที่มีอยู่แล้ว
                     return jsonify({
                         'success': True,
                         'message': f'Success! Added {quantity} units to {name}.',
@@ -720,7 +721,8 @@ def admin_add_equipment():
                             'Quantity': quantity,
                             'DueDate': '-',
                             'BorrowerID': '-',
-                            'BorrowDate': '-'
+                            'BorrowDate': '-',
+                            'isMemberRequired': isMemberRequired
                         }
                     )
                     
@@ -729,7 +731,6 @@ def admin_add_equipment():
                                  url_for('admin_lenses') if category == 'Lenses' else \
                                  url_for('admin_equipment')
                     
-                    # สำหรับการเพิ่มอุปกรณ์ใหม่
                     return jsonify({
                         'success': True,
                         'message': f'Success! Added {quantity} units of {name}',
