@@ -286,12 +286,7 @@ main {
     background-color: #0056b3; /* เปลี่ยนสีเมื่อเอาเมาส์ชี้ไป */
 }
 
-.username a:hover {
-    color: #000000; /* เปลี่ยนเป็นสีดำ */
-    text-decoration: underline; /* เพิ่มเส้นใต้เมื่อชี้เม้าส์ */
- }
- 
- .logout-button {
+.logout-button {
     display: inline-block;
     padding: 10px 20px;
     margin: 10px 0;
@@ -309,4 +304,20 @@ main {
  
  .logout-button:hover {
     background-color: #ff1f3a;
- }
+}
+
+.add-equipment-button {
+    display: inline-block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background-color: #91766E;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.add-equipment-button:hover {
+    background-color: #75554E;
+}
