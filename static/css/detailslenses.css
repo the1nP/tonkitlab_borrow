@@ -204,21 +204,23 @@ main {
 }
 
 .equipment-table th, .equipment-table td {
-    padding: 15px;
+    padding: 10px;
     text-align: center;
     border: 1px solid #ddd;
 }
 
 .equipment-table th {
     background-color: #91766E;
-    color: #F6ECE3;
-    font-size: 18px;
-    font-weight: bold;
+    color: white;
 }
 
 .equipment-table td {
-    font-size: 16px;
-    color: #333;
+    font-size: 14px;
+}
+
+.equipment-table td:nth-child(5) { /* คอลัมน์ Member Only */
+    font-weight: bold;
+    color: #555;
 }
 
 .equipment-table .action-button {
@@ -250,4 +252,38 @@ main {
     .equipment-table table {
         font-size: 14px;
     }
+}
+
+.logout-button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #ff4b5c;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+ }
+ 
+ .logout-button:hover {
+    background-color: #ff1f3a;
+ }
+
+/* สไตล์สำหรับเครื่องหมายถูก */
+.icon-check {
+    color: green;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* สไตล์สำหรับเครื่องหมายกากบาท */
+.icon-cross {
+    color: red;
+    font-weight: bold;
+    font-size: 16px;
 }

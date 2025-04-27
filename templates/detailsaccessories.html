@@ -24,11 +24,11 @@
             </ul>
             <!-- Username -->
             <div class="user-section">
-                <!--Notification-->
+                <!--Notification
                 <div class="notification">
                     <a href="#" id="notification-icon"><img src="{{ url_for('static', filename='images/bell.png') }}" alt="Notification Bell" /></a>
                     <div class="notification-badge">3</div> <!-- ตัวเลขแจ้งเตือน -->
-                        <!-- Dropdown Notifications -->
+                        <!-- Dropdown Notifications 
                         <div class="notification-dropdown" id="notification-dropdown">
                         <h4>Notifications</h4>
                         <ul>
@@ -37,15 +37,20 @@
                         <li>Reminder: Return equipment ABC today.</li>
                         </ul>
                         </div>
-                </div>
+                </div> -->
                 <!-- User -->
                 <div class="user">
-                    <a href="{{ url_for('profile') }}">
-                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
-                    </a>
-                    <div class="username">
-                        <a href="{{ url_for('profile') }}">Username</a>
-                    </div>
+                    {% if session.username %}
+                        <a href="{{ url_for('profile') }}">
+                            <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+                        </a>
+                        <div class="username">
+                            <a href="{{ url_for('profile') }}">{{ session.username }}</a>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                    {% endif %}
                 </div>
             </div>
         </nav>
@@ -77,7 +82,11 @@
                             <td>{{ item.Quantity }}</td>
                             <td>{{ item.DueDate if item.DueDate else '-' }}</td>
                             <td>
-                                <button class="action-button" {% if item.Status != 'Available' %}disabled{% endif %}>Borrow</button>
+                                <button class="action-button" 
+                                        {% if item.Status != 'Available' %}disabled{% endif %}
+                                        onclick="borrowEquipment('{{ item.EquipmentID }}')">
+                                    Borrow
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -111,6 +120,25 @@
                 }
             });
         });
+
+        function borrowEquipment(equipmentId) {
+            fetch(`/borrow/${equipmentId}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the page to show updated status
+                    location.reload();
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to borrow equipment. Please try again.');
+            });
+        }
     </script>
         
 </body>

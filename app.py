@@ -413,15 +413,6 @@ def borrow_equipment(equipment_id):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify(success=False, message="An unexpected error occurred"), 500
-@app.route('/details_accessories')
-def details_accessories():
-    response = EquipmentTable.scan(
-        FilterExpression=Attr('Category').eq('Accessories')
-    )
-    items = response['Items']
-    print(items)
-    return render_template('detailsaccessories.html',items=items)
-
 @app.route('/details_lenses')
 def details_lenses():
     try:
@@ -430,6 +421,18 @@ def details_lenses():
         )
         items = response['Items']
         return render_template('detailslenses.html', items=items)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
+
+@app.route('/details_accessories')
+def details_accessories():
+    try:
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq('Accessories')
+        )
+        items = response['Items']
+        return render_template('detailsaccessories.html', items=items)
     except Exception as e:
         print(f"Error: {e}")
         return "An error occurred while fetching data from DynamoDB."
