@@ -337,7 +337,7 @@ def logout():
 def details_camera():
     try:
         response = EquipmentTable.scan(
-            FilterExpression=Attr('Category').eq('Camera')
+            FilterExpression=Attr('Category').eq('Cameras')
         )
         items = response['Items']
         # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
@@ -420,6 +420,9 @@ def details_lenses():
             FilterExpression=Attr('Category').eq('Lenses')
         )
         items = response['Items']
+        # เพิ่ม isMemberRequired ถ้าไม่มี
+        for item in items:
+            item['isMemberRequired'] = item.get('isMemberRequired', 'no')
         return render_template('detailslenses.html', items=items)
     except Exception as e:
         print(f"Error: {e}")
@@ -432,6 +435,9 @@ def details_accessories():
             FilterExpression=Attr('Category').eq('Accessories')
         )
         items = response['Items']
+        # เพิ่ม isMemberRequired ถ้าไม่มี
+        for item in items:
+            item['isMemberRequired'] = item.get('isMemberRequired', 'no')
         return render_template('detailsaccessories.html', items=items)
     except Exception as e:
         print(f"Error: {e}")

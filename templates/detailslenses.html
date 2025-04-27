@@ -68,19 +68,27 @@
                             <th>No.</th>
                             <th>Model</th>
                             <th>Status</th>
-                            <th>Quantity Left</th>
                             <th>Due Date</th>
+                            <th>Member Only</th>
                             <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
-                        <tr>
+                        <tr data-equipment-id="{{ item.EquipmentID }}">
                             <td>{{ loop.index }}</td>
                             <td>{{ item.Name }}</td>
-                            <td style="color: {{ 'green' if item.Status == 'Available' else 'red' }};">{{ item.Status }}</td>
-                            <td>{{ item.Quantity }}</td>
+                            <td style="color: {{ 'green' if item.Status == 'Available' else 'yellow' if item.Status == 'Pending' else 'red' }};">
+                                {{ item.Status }}
+                            </td>
                             <td>{{ item.DueDate if item.DueDate else '-' }}</td>
+                            <td>
+                                {% if item.isMemberRequired == 'yes' %}
+                                    <span class="icon-check">&#10004;</span>
+                                {% else %}
+                                    <span class="icon-cross">&#10008;</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <button class="action-button" 
                                         {% if item.Status != 'Available' %}disabled{% endif %}
