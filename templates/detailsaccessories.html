@@ -80,7 +80,7 @@
                         <tr data-equipment-id="{{ item.EquipmentID }}">
                             <td>{{ loop.index }}</td>
                             <td>{{ item.Name }}</td>
-                            <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'yellow' if item.StatusEquipment == 'Pending' else 'red' }};">
+                            <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'red' }};">
                                 {{ item.StatusEquipment }}
                             </td>
                             <td>{{ item.Quantity }}</td>
@@ -93,7 +93,11 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="action-button" {% if item.Status != 'Available' %}disabled{% endif %}>Borrow</button>
+                                <button class="action-button" 
+                                        {% if item.StatusEquipment != 'Available' or item.Quantity <= 0 %}disabled{% endif %}
+                                        onclick="borrowEquipment('{{ item.EquipmentID }}')">
+                                    Borrow
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}

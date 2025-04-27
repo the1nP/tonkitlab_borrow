@@ -61,7 +61,11 @@
                             <td>{{ record.user_id }}</td>
                             <td>{{ record.record_date }}</td>
                             <td>{{ record.equipment_name }}</td>
-                            <td>{{ record.status }}</td>
+                            <td style="color: {{ 'green' if record.StatusReq == 'Approved' 
+                                                else 'yellow' if record.StatusReq == 'Pending' 
+                                                else 'red' }};">
+                                {{ record.StatusReq }}
+                            </td>
                             <td>{{ record.due_date }}</td>
                             <td>{{ record.type }}</td>
                         </tr>

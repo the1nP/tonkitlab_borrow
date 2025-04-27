@@ -66,7 +66,9 @@
                         <td>{{ loop.index }}</td>
                         <td>{{ record.record_date }}</td>
                         <td>{{ record.equipment_name }}</td>
-                        <td>{{ record.status }}</td>
+                        <td style="color: {{ 'green' if record.status == 'approved' 
+                    else 'yellow' if record.status == 'pending' 
+                    else 'red' }};">{{ record.status }}</td>
                         <td>{{ record.due_date }}</td>
                         <td>
                             <form action="/return" method="post">

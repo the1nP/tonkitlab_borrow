@@ -357,62 +357,50 @@ def borrow_equipment(equipment_id):
             return jsonify(success=False, message="Equipment not found"), 404
 
         equipment_item = equipment['Item']
-        equipment_name = equipment_item['Name']  # Get the Name attribute
-        is_member_required = equipment_item.get('isMemberRequired', 'no')  # Default to 'no' if not specified
+        current_quantity = int(equipment_item.get('Quantity', 0))
+        
+        if current_quantity <= 0:
+            return jsonify(success=False, message="Equipment is not available"), 400
 
-        # Step 2: Retrieve user details from Cognito
+        # Step 2: Check member requirements
         access_token = session.get('access_token')
         if not access_token:
             return jsonify(success=False, message="User not logged in"), 401
 
         user_response = cognito.get_user(AccessToken=access_token)
         user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
-        club_member = user_attributes.get('custom:club_member', 'no')  # Default to 'no' if not specified
+        club_member = user_attributes.get('custom:club_member', 'no')
 
-        # Step 3: Check if the user is allowed to borrow the equipment
+        is_member_required = equipment_item.get('isMemberRequired', 'no')
         if is_member_required == 'yes' and club_member != 'yes':
             return jsonify(success=False, message="This equipment is restricted to members only"), 403
 
-        # Step 4: Calculate the new due date (one week from today)
-        local_tz = pytz.timezone('Asia/Bangkok')  # Replace with your local timezone
+        # Step 3: Create borrow request record
+        local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
-        due_date = (now + timedelta(weeks=1)).strftime('%Y-%m-%d %H:%M:%S')
-
-        # Step 5: Update the equipment status to Pending
-        EquipmentTable.update_item(
-            Key={'EquipmentID': equipment_id},
-            UpdateExpression="set #s = :s",
-            ExpressionAttributeNames={'#s': 'StatusEquipment'},
-            ExpressionAttributeValues={':s': 'Pending'},
-            ReturnValues="UPDATED_NEW"
-        )
-
-        # Step 6: Insert a new record into BorrowReturnRecords
         record_id = str(uuid.uuid4())
-        user_id = session.get('username')  # Assuming user_id is stored in session
-        record_date = now.strftime('%Y-%m-%d %H:%M:%S')
+        user_id = session.get('username')
 
         BorrowReturnRecordsTable.put_item(
             Item={
                 'record_id': record_id,
                 'user_id': user_id,
                 'equipment_id': equipment_id,
-                'equipment_name': equipment_name,
+                'equipment_name': equipment_item['Name'],
                 'type': 'borrow',
-                'record_date': record_date,
+                'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
                 'due_date': '-',
-                'status': 'pending_borrow',
+                'StatusReq': 'Pending',  # ใช้ StatusReq แทน status
                 'isApprovedYet': 'false'
             }
         )
-        return jsonify(success=True)
-    except ClientError as e:
-        error_message = e.response['Error']['Message']
-        print(f"Error: {error_message}")
-        return jsonify(success=False, message=error_message), 500
+
+        return jsonify(success=True, message="Borrow request submitted successfully")
+
     except Exception as e:
         print(f"Error: {e}")
         return jsonify(success=False, message="An unexpected error occurred"), 500
+
 @app.route('/details_lenses')
 def details_lenses():
     try:
@@ -464,27 +452,17 @@ def list_records():
 @app.route('/return', methods=['POST'])
 def return_item():
     try:
-        local_tz = pytz.timezone('Asia/Bangkok')  # Replace with your local timezone
+        local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
         
-        #record_id = request.form['record_id']
         user_id = request.form['user_id']
         equipment_id = request.form['equipment_id']
         equipment_name = request.form['equipment_name']
-        record_date = request.form['record_date']
         due_date = request.form['due_date']
 
-        # response = BorrowReturnRecordsTable.scan(
-        #     FilterExpression=Attr('equipment_id').eq(equipment_id) & Attr('status').eq('pending_return')
-        # )
-        # pending_request = response['Items']
-        # if pending_request:
-        #     flash('There is already a pending return request for this equipment.', 'info')
-        #     return redirect(url_for('list'))
-
         record_id = str(uuid.uuid4())
-        user_id = session.get('username')  # Assuming user_id is stored in session
-        record_date = now.strftime('%Y-%m-%d %H:%M:%S')
+        user_id = session.get('username')
+        
         BorrowReturnRecordsTable.put_item(
             Item={
                 'record_id': record_id,
@@ -492,12 +470,13 @@ def return_item():
                 'equipment_id': equipment_id,
                 'equipment_name': equipment_name,
                 'type': 'return',
-                'record_date': record_date,
+                'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
                 'due_date': due_date,
-                'status': 'pending_return',
+                'StatusReq': 'Pending',  # ใช้ StatusReq แทน status
                 'isApprovedYet': 'false'
             }
         )
+        
         flash('Return request submitted successfully.', 'success')
         return redirect(url_for('list'))
     except Exception as e:
@@ -522,46 +501,41 @@ def admin_req():
     return render_template('admin_req.html')
 
 @app.route('/approve/<reqType>/<equipment_name>/<equipment_id>/<user_id>/<record_id>', methods=['POST'])
-def approve_record(reqType,equipment_name, equipment_id, user_id,record_id):
+def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
     try:
-        # ...existing code...
-        if reqType == 'borrow':
-            # Update the status in the Equipment table
+        local_tz = pytz.timezone('Asia/Bangkok')
+        now = datetime.now(local_tz)
+        due_date = (now + timedelta(weeks=1)).strftime('%Y-%m-%d %H:%M:%S')
+
+        # อัพเดต StatusReq ใน BorrowReturnRecords
+        BorrowReturnRecordsTable.update_item(
+            Key={'record_id': record_id},
+            UpdateExpression="SET StatusReq = :s, isApprovedYet = :a",
+            ExpressionAttributeValues={
+                ':s': 'Approved',
+                ':a': 'true'
+            }
+        )
+
+        # อัพเดตจำนวนและ StatusEquipment ใน Equipment
+        equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
+        if 'Item' in equipment:
+            current_quantity = int(equipment['Item'].get('Quantity', 0))
+            
+            if reqType == 'borrow':
+                new_quantity = current_quantity - 1
+            else:  # return
+                new_quantity = current_quantity + 1
+
             EquipmentTable.update_item(
                 Key={'EquipmentID': equipment_id},
-                UpdateExpression="set #s = :s, #u = :u, DueDate = :d, BorrowDate = :bd",
-                ExpressionAttributeNames={
-                    '#s': 'StatusEquipment',
-                    '#u': 'BorrowerID'
-                },
+                UpdateExpression="SET Quantity = :q, StatusEquipment = :s",
                 ExpressionAttributeValues={
-                    ':s': 'Not Available',
-                    ':u': user_id,
-                    ':d': due_date,
-                    ':bd': now.strftime('%Y-%m-%d %H:%M:%S')
-                },
-                ReturnValues="UPDATED_NEW"
+                    ':q': new_quantity,
+                    ':s': 'Available' if new_quantity > 0 else 'Not Available'
+                }
             )
-        elif reqType == 'return':
-            # Update the status in the Equipment table
-            EquipmentTable.update_item(
-                Key={'EquipmentID': equipment_id},
-                UpdateExpression="set #s = :s, #d = :d, #borrowerId = :b, #borrowerDate = :bd",
-                ExpressionAttributeNames={
-                    '#s': 'StatusEquipment',
-                    '#d': 'DueDate',
-                    '#borrowerId': 'BorrowerID',
-                    '#borrowerDate': 'BorrowDate'
-                },
-                ExpressionAttributeValues={
-                    ':s': 'Available',
-                    ':d': '-',
-                    ':b': '-',
-                    ':bd': '-'
-                },
-                ReturnValues="UPDATED_NEW"
-            )
-        # ...rest of the code...
+
         return jsonify(success=True)
     except Exception as e:
         print(f"Error: {e}")
@@ -646,69 +620,59 @@ def admin_add_equipment():
                     'message': 'All fields are required.'
                 })
 
-            try:
-                response = EquipmentTable.scan(
-                    FilterExpression=Attr('Name').eq(name) & Attr('Category').eq(category)
+            response = EquipmentTable.scan(
+                FilterExpression=Attr('Name').eq(name) & Attr('Category').eq(category)
+            )
+            items = response['Items']
+
+            if items:
+                existing_item = items[0]
+                current_quantity = int(existing_item.get('Quantity', 0))
+                new_quantity = current_quantity + quantity
+
+                EquipmentTable.update_item(
+                    Key={'EquipmentID': existing_item['EquipmentID']},
+                    UpdateExpression='SET #qty = :new_qty, #st = :new_status, #member = :member_req',
+                    ExpressionAttributeNames={
+                        '#qty': 'Quantity',
+                        '#st': 'StatusEquipment',
+                        '#member': 'isMemberRequired'
+                    },
+                    ExpressionAttributeValues={
+                        ':new_qty': new_quantity,
+                        ':new_status': 'Available' if new_quantity > 0 else 'Not Available',
+                        ':member_req': isMemberRequired
+                    }
                 )
-                items = response['Items']
+            else:
+                equipment_id = str(uuid.uuid4())
+                EquipmentTable.put_item(
+                    Item={
+                        'EquipmentID': equipment_id,
+                        'Name': name,
+                        'Category': category,
+                        'StatusEquipment': 'Available' if quantity > 0 else 'Not Available',
+                        'Quantity': quantity,
+                        'DueDate': '-',
+                        'BorrowerID': '-',
+                        'BorrowDate': '-',
+                        'isMemberRequired': isMemberRequired
+                    }
+                )
 
-                if items:
-                    existing_item = items[0]
-                    current_quantity = int(existing_item.get('Quantity', 0))
-                    new_quantity = current_quantity + quantity
-                    new_status = 'Available' if new_quantity > 0 else 'Not Available'
-
-                    EquipmentTable.update_item(
-                        Key={'EquipmentID': existing_item['EquipmentID']},
-                        UpdateExpression='SET #qty = :new_qty, #st = :new_status, #member = :member_req',
-                        ExpressionAttributeNames={
-                            '#qty': 'Quantity',
-                            '#st': 'StatusEquipment',
-                            '#member': 'isMemberRequired'
-                        },
-                        ExpressionAttributeValues={
-                            ':new_qty': new_quantity,
-                            ':new_status': new_status,
-                            ':member_req': isMemberRequired
-                        }
-                    )
-                else:
-                    equipment_id = str(uuid.uuid4())
-                    initial_status = 'Available' if quantity > 0 else 'Not Available'
-                    EquipmentTable.put_item(
-                        Item={
-                            'EquipmentID': equipment_id,
-                            'Name': name,
-                            'Category': category,
-                            'StatusEquipment': initial_status,
-                            'Quantity': quantity,
-                            'DueDate': '-',
-                            'BorrowerID': '-',
-                            'BorrowDate': '-',
-                            'isMemberRequired': isMemberRequired
-                        }
-                    )
-                    
-                    redirect_url = url_for('admin_camera') if category == 'Cameras' else \
-                                 url_for('admin_accessories') if category == 'Accessories' else \
-                                 url_for('admin_lenses') if category == 'Lenses' else \
-                                 url_for('admin_equipment')
-                    
-                    return jsonify({
-                        'success': True,
-                        'message': f'Success! Added {quantity} units of {name}',
-                        'name': name,
-                        'quantity': quantity,
-                        'isUpdate': False,
-                        'redirect': redirect_url
-                    })
-
-            except Exception as scan_error:
-                print(f"Error scanning table: {scan_error}")
-                return jsonify({
-                    'success': False,
-                    'message': 'Error checking for existing equipment.'
-                })
+            redirect_url = url_for('admin_camera') if category == 'Cameras' else \
+                         url_for('admin_accessories') if category == 'Accessories' else \
+                         url_for('admin_lenses') if category == 'Lenses' else \
+                         url_for('admin_equipment')
+            
+            return jsonify({
+                'success': True,
+                'message': f'Success! Added {quantity} units of {name}',
+                'name': name,
+                'quantity': quantity,
+                'isUpdate': False,
+                'redirect': redirect_url
+            })
 
         except Exception as e:
             print(f"Error in admin_add_equipment: {e}")
