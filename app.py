@@ -387,10 +387,10 @@ def borrow_equipment(equipment_id):
                 'user_id': user_id,
                 'equipment_id': equipment_id,
                 'equipment_name': equipment_item['Name'],
-                'type': 'borrow',
+                'RequestType': 'borrow',  # เพิ่ม RequestType
                 'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
                 'due_date': '-',
-                'StatusReq': 'Pending',  # ใช้ StatusReq แทน status
+                'StatusReq': 'Pending',
                 'isApprovedYet': 'false'
             }
         )
@@ -452,6 +452,7 @@ def list_records():
 @app.route('/return', methods=['POST'])
 def return_item():
     try:
+        # ...existing code...
         local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
         
@@ -469,10 +470,10 @@ def return_item():
                 'user_id': user_id,
                 'equipment_id': equipment_id,
                 'equipment_name': equipment_name,
-                'type': 'return',
+                'RequestType': 'return',  # เพิ่ม RequestType
                 'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
                 'due_date': due_date,
-                'StatusReq': 'Pending',  # ใช้ StatusReq แทน status
+                'StatusReq': 'Pending',
                 'isApprovedYet': 'false'
             }
         )
@@ -485,35 +486,38 @@ def return_item():
 @app.route('/admin_req')
 def admin_req():
     try:
-        user_id = session.get('username')  # Assuming user_id is stored in session
-        if not user_id:
-            flash('You need to log in first.', 'info')
-            return redirect(url_for('login'))  # Redirect to login if user is not logged in
-
+        # ดึงคำขอที่มี StatusReq เป็น Pending
         response = BorrowReturnRecordsTable.scan(
-            FilterExpression=(Attr('status').eq('pending_borrow') | Attr('status').eq('pending_return') and Attr('isApprovedYet').eq('false'))
+            FilterExpression=Attr('StatusReq').eq('Pending')
         )
-        records = response['Items']
+        
+        if 'Items' in response:
+            records = response['Items']
+            # เรียงลำดับตามวันที่บันทึก (ล่าสุดขึ้นก่อน)
+            records.sort(key=lambda x: x['record_date'], reverse=True)
+        else:
+            records = []
+
         return render_template('admin_req.html', records=records)
+    
     except Exception as e:
-        print(f"Error: {e}")
-        return "An error occurred while fetching data from DynamoDB."
-    return render_template('admin_req.html')
+        print(f"Error in admin_req: {e}")
+        flash('Failed to load requests.', 'error')
+        return redirect(url_for('admin_equipment'))
 
 @app.route('/approve/<reqType>/<equipment_name>/<equipment_id>/<user_id>/<record_id>', methods=['POST'])
 def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
     try:
-        local_tz = pytz.timezone('Asia/Bangkok')
-        now = datetime.now(local_tz)
-        due_date = (now + timedelta(weeks=1)).strftime('%Y-%m-%d %H:%M:%S')
+        # ...existing code...
 
-        # อัพเดต StatusReq ใน BorrowReturnRecords
+        # อัพเดต StatusReq และ RequestType ใน BorrowReturnRecords
         BorrowReturnRecordsTable.update_item(
             Key={'record_id': record_id},
-            UpdateExpression="SET StatusReq = :s, isApprovedYet = :a",
+            UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, RequestType = :r",
             ExpressionAttributeValues={
                 ':s': 'Approved',
-                ':a': 'true'
+                ':a': 'true',
+                ':r': reqType  # 'borrow' หรือ 'return'
             }
         )
 
@@ -524,8 +528,18 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
             
             if reqType == 'borrow':
                 new_quantity = current_quantity - 1
-            else:  # return
-                new_quantity = current_quantity + 1
+            elif reqType == 'return':  # เพิ่มเงื่อนไขสำหรับการคืน
+                # หาจำนวนที่ยืมไปจากประวัติการยืม
+                borrow_history = BorrowReturnRecordsTable.scan(
+                    FilterExpression=
+                        Attr('equipment_id').eq(equipment_id) & 
+                        Attr('user_id').eq(user_id) & 
+                        Attr('type').eq('borrow') &
+                        Attr('StatusReq').eq('Approved')
+                )
+                if 'Items' in borrow_history and len(borrow_history['Items']) > 0:
+                    borrowed_quantity = 1  # จำนวนที่ยืมไป (default = 1)
+                    new_quantity = current_quantity + borrowed_quantity
 
             EquipmentTable.update_item(
                 Key={'EquipmentID': equipment_id},

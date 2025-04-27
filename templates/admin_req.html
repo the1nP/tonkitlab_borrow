@@ -51,6 +51,7 @@
                             <th>Item</th>
                             <th>Return Date</th>
                             <th>Request Type</th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
@@ -62,13 +63,17 @@
                             <td>{{ record.record_date }}</td>
                             <td>{{ record.equipment_name }}</td>
                             <td>{{ record.due_date }}</td>
-                            <td>{{ record.type }}</td>
+                            <td>{{ record.RequestType }}</td>
+                            <td>{{ record.StatusReq }}</td>
                             <td>
-                                <button class="action-button" data-record-id="{{ record.record_id }}" data-equipment-id="{{ record.equipment_id }}" data-equipment-name="{{record.equipment_name}}" data-user-id="{{record.user_id}}" request-type="{{record.type}}">
-                                    {% if record.type == 'borrow' %}
+                                <button class="action-button" 
+                                        data-record-id="{{ record.record_id }}" 
+                                        data-equipment-id="{{ record.equipment_id }}" 
+                                        data-equipment-name="{{ record.equipment_name }}"
+                                        data-user-id="{{ record.user_id }}"
+                                        data-request-type="{{ record.RequestType }}">
+                                    {% if record.StatusReq == 'Pending' %}
                                         Approve
-                                    {% else %}
-                                        Return
                                     {% endif %}
                                 </button>
                             </td>

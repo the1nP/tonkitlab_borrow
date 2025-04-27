@@ -54,10 +54,10 @@
                         <th>No.</th>
                         <th>Date Recorded</th>
                         <th>Model</th>
+                        <th>Request Type</th>
                         <th>Status</th>
                         <th>Return Date</th>
                         <th>Action</th>
-                        <th>Request Type</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,9 +66,10 @@
                         <td>{{ loop.index }}</td>
                         <td>{{ record.record_date }}</td>
                         <td>{{ record.equipment_name }}</td>
+                        <td>{{ record.RequestType }}</td>
                         <td style="color: {{ 'green' if record.status == 'approved' 
                     else 'yellow' if record.status == 'pending' 
-                    else 'red' }};">{{ record.status }}</td>
+                    else 'red' }};">{{ record.StatusReq }}</td>
                         <td>{{ record.due_date }}</td>
                         <td>
                             <form action="/return" method="post">
@@ -80,7 +81,7 @@
                                 <input type="hidden" name="due_date" value="{{ record.due_date }}">
                                 <button type="submit" class="return-btn" {% if record.status != 'approved' %}disabled{% endif %}>Return</button>
                             </form>
-                        <td>{{ record.type }}</td>
+    
                         <tr>
                     {% endfor %}
                 </tbody>
