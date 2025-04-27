@@ -7,6 +7,7 @@
     <title>ToolTrack</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/detailslenses.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 
 <body>
@@ -90,7 +91,10 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="action-button" {% if item.Status != 'Available' %}disabled{% endif %}>Borrow</button>
+                                <button class="action-button" 
+                                        {% if item.Status != 'Available' %}disabled{% endif %}>
+                                    Borrow
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -104,45 +108,62 @@
     <!--Javascripts-->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const notificationIcon = document.getElementById("notification-icon");
-            const notificationDropdown = document.getElementById("notification-dropdown");
+            const borrowButtons = document.querySelectorAll(".action-button");
+
+            borrowButtons.forEach(button => {
+                button.addEventListener("click", function () {
+                    const row = this.closest("tr");
+                    const equipmentId = row.getAttribute("data-equipment-id");
         
-            notificationIcon.addEventListener("click", function (event) {
-                event.preventDefault();
-                // Toggle the visibility of the dropdown
-                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
-                    notificationDropdown.style.display = "block";
-                } else {
-                    notificationDropdown.style.display = "none";
-                }
-            });
-        
-            // Close the dropdown when clicking outside
-            document.addEventListener("click", function (event) {
-                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
-                    notificationDropdown.style.display = "none";
-                }
+                    Swal.fire({
+                        title: 'Are you sure?',
+                        text: "Do you want to borrow this equipment? You will have 7 days to use it after admin approval.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, borrow it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`/borrow/${equipmentId}`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json"
+                                },
+                                body: JSON.stringify({ status: "Pending" })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    this.disabled = true;
+                                    Swal.fire(
+                                        'Borrowed!',
+                                        'The equipment has been borrowed.',
+                                        'success'
+                                    ).then(() => {
+                                        window.location.reload();
+                                    });
+                                } else {
+                                    Swal.fire(
+                                        'Failed!',
+                                        'Failed to borrow the equipment because you are not a member.',
+                                        'error'
+                                    );
+                                }
+                            })
+                            .catch(error => {
+                                console.error("Error:", error);
+                                Swal.fire(
+                                    'Error!',
+                                    'An error occurred while borrowing the equipment.',
+                                    'error'
+                                );
+                            });
+                        }
+                    });
+                });
             });
         });
-
-        function borrowEquipment(equipmentId) {
-            fetch(`/borrow/${equipmentId}`, {
-                method: 'POST',
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Refresh the page to show updated status
-                    location.reload();
-                } else {
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to borrow equipment. Please try again.');
-            });
-        }
     </script>
         
 </body>
