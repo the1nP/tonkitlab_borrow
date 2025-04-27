@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Add Equipment</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_add_equipment.css') }}">
+    <!-- เพิ่ม SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -72,6 +74,38 @@
             </form>
         </section>
     </main>
+
+    <!-- เพิ่ม JavaScript สำหรับจัดการ form submission -->
+    <script>
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const response = await fetch("{{ url_for('admin_add_equipment') }}", {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                await Swal.fire({
+                    title: 'Success!',
+                    text: result.message,
+                    icon: 'success',
+                    confirmButtonColor: '#91766E'
+                });
+                window.location.href = result.redirect;
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonColor: '#91766E'
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
