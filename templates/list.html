@@ -72,7 +72,7 @@
                     else 'red' }};">{{ record.StatusReq }}</td>
                         <td>{{ record.due_date }}</td>
                         <td>
-                            <form action="/return" method="post">
+                            <form action="/return" method="post" onsubmit="return confirmReturn(event)">
                                 <input type="hidden" name="record_id" value="{{ record.record_id }}">
                                 <input type="hidden" name="user_id" value="{{ record.user_id }}">
                                 <input type="hidden" name="equipment_id" value="{{ record.equipment_id }}">
@@ -149,3 +149,62 @@
     {% endwith %}
 </body>
 </html>
+
+<!-- เพิ่ม JavaScript สำหรับยืนยันการคืนอุปกรณ์ -->
+<script>
+function confirmReturn(event) {
+    event.preventDefault();
+    const form = event.target;
+    
+    Swal.fire({
+        title: 'Confirm Return',
+        text: 'Do you want to return this equipment?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, return it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#91766E',
+        cancelButtonColor: '#d33'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // ส่งข้อมูลแบบ fetch API แทนการ submit form ปกติ
+            fetch('/return', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    record_id: form.querySelector('input[name="record_id"]').value,
+                    user_id: form.querySelector('input[name="user_id"]').value,
+                    equipment_id: form.querySelector('input[name="equipment_id"]').value,
+                    equipment_name: form.querySelector('input[name="equipment_name"]').value,
+                    record_date: form.querySelector('input[name="record_date"]').value,
+                    due_date: form.querySelector('input[name="due_date"]').value,
+                    RequestType: 'return'  // กำหนดค่า RequestType เป็น 'return'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Return request has been submitted.',
+                        icon: 'success',
+                        confirmButtonColor: '#91766E'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to submit return request.',
+                        icon: 'error',
+                        confirmButtonColor: '#91766E'
+                    });
+                }
+            });
+        }
+    });
+    return false;
+}
+</script>

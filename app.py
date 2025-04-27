@@ -452,36 +452,35 @@ def list_records():
 @app.route('/return', methods=['POST'])
 def return_item():
     try:
-        # ...existing code...
+        data = request.get_json()
         local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
-        
-        user_id = request.form['user_id']
-        equipment_id = request.form['equipment_id']
-        equipment_name = request.form['equipment_name']
-        due_date = request.form['due_date']
-
         record_id = str(uuid.uuid4())
-        user_id = session.get('username')
         
         BorrowReturnRecordsTable.put_item(
             Item={
                 'record_id': record_id,
-                'user_id': user_id,
-                'equipment_id': equipment_id,
-                'equipment_name': equipment_name,
-                'RequestType': 'return',  # เพิ่ม RequestType
+                'user_id': data['user_id'],
+                'equipment_id': data['equipment_id'],
+                'equipment_name': data['equipment_name'],
+                'RequestType': 'return',  # กำหนดค่า RequestType เป็น 'return'
                 'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
-                'due_date': due_date,
+                'due_date': data['due_date'],
                 'StatusReq': 'Pending',
                 'isApprovedYet': 'false'
             }
         )
         
-        flash('Return request submitted successfully.', 'success')
-        return redirect(url_for('list'))
+        return jsonify({
+            'success': True,
+            'message': 'Return request submitted successfully'
+        })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f"Error in return_item: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Failed to submit return request'
+        }), 500
 
 @app.route('/admin_req')
 def admin_req():
@@ -513,17 +512,22 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
         borrow_date = now.strftime('%Y-%m-%d %H:%M:%S')
         due_date = (now + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 
-        # อัพเดต StatusReq, RequestType และ due_date ใน BorrowReturnRecords
+        # อัพเดต StatusReq และ RequestType ใน BorrowReturnRecords
+        update_expression = "SET StatusReq = :s, isApprovedYet = :a"
+        expression_values = {
+            ':s': 'Approved',
+            ':a': 'true'
+        }
+
+        # เพิ่มการอัพเดต RequestType เมื่อเป็นการคืน
+        if reqType == 'return':
+            update_expression += ", RequestType = :r"
+            expression_values[':r'] = 'return'
+
         BorrowReturnRecordsTable.update_item(
             Key={'record_id': record_id},
-            UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, RequestType = :r, due_date = :d, record_date = :bd",
-            ExpressionAttributeValues={
-                ':s': 'Approved',
-                ':a': 'true',
-                ':r': reqType,
-                ':d': due_date,
-                ':bd': borrow_date
-            }
+            UpdateExpression=update_expression,
+            ExpressionAttributeValues=expression_values
         )
 
         # อัพเดตจำนวน, StatusEquipment และ due_date ใน Equipment
