@@ -76,6 +76,12 @@
                                         {% if item.Quantity <= 0 %}disabled{% endif %}>
                                     Delete
                                 </button>
+                                <!-- เพิ่มปุ่มในตาราง -->
+                                <button class="view-items-btn" 
+                                        onclick="viewItemList('{{ item.EquipmentID }}', '{{ item.Name }}')"
+                                        title="View Items">
+                                    View Items
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -125,6 +131,81 @@ function confirmDelete(EquipmentId, Name) {
         }
     });
 }
+
+function viewItemList(equipmentId, equipmentName) {
+    fetch(`/get_item_list/${equipmentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const modal = document.getElementById('itemListModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const itemListBody = document.getElementById('itemListBody');
+                
+                modalTitle.textContent = `Items List - ${data.equipment_name}`;
+                itemListBody.innerHTML = '';
+                
+                data.items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.ItemID}</td>
+                        <td style="color: ${item.Status === 'Available' ? 'green' : 
+                                         item.Status === 'Deleted' ? 'red' : 'orange'}">
+                            ${item.Status}
+                        </td>
+                        <td>${item.BorrowerID}</td>
+                        <td>${item.BorrowDate}</td>
+                        <td>${item.DueDate}</td>
+                    `;
+                    itemListBody.appendChild(row);
+                });
+                
+                modal.style.display = 'block';
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message
+                });
+            }
+        });
+}
+
+// ปิด Modal เมื่อคลิกที่ปุ่มปิดหรือคลิกนอก Modal
+const modal = document.getElementById('itemListModal');
+const span = document.getElementsByClassName('close')[0];
+
+span.onclick = function() {
+    modal.style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
 </script>
+
+<!-- เพิ่ม Modal สำหรับแสดงรายการ Items -->
+<div id="itemListModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item ID</th>
+                    <th>Status</th>
+                    <th>Borrower</th>
+                    <th>Borrow Date</th>
+                    <th>Due Date</th>
+                </tr>
+            </thead>
+            <tbody id="itemListBody">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
 </body>
 </html>

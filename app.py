@@ -776,10 +776,30 @@ def admin_add_equipment():
 
     return render_template('admin_add_equipment.html')
 
+def update_equipment_quantity(equipment_id):
+    """อัพเดต Quantity ตามจำนวน Items ที่มีสถานะ Available"""
+    try:
+        equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
+        if 'Item' in equipment:
+            items = equipment['Item'].get('Items', [])
+            available_count = sum(1 for item in items if item['Status'] == 'Available')
+            
+            EquipmentTable.update_item(
+                Key={'EquipmentID': equipment_id},
+                UpdateExpression='SET Quantity = :qty, StatusEquipment = :status',
+                ExpressionAttributeValues={
+                    ':qty': available_count,
+                    ':status': 'Available' if available_count > 0 else 'Not Available'
+                }
+            )
+            return True
+    except Exception as e:
+        print(f"Error updating equipment quantity: {e}")
+        return False
+
 @app.route('/delete_equipment/<equipment_id>', methods=['POST'])
 def delete_equipment(equipment_id):
     try:
-        # ดึงข้อมูลอุปกรณ์
         equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
         
         if 'Item' not in equipment:
@@ -788,32 +808,43 @@ def delete_equipment(equipment_id):
                 'message': 'Equipment not found'
             }), 404
 
-        # แก้ไขจาก equipment['Name'] เป็น equipment['Item']
-        current_quantity = int(equipment['Item'].get('Quantity', 0))
+        items = equipment['Item'].get('Items', [])
+        available_items = [item for item in items if item['Status'] == 'Available']
         
-        if current_quantity <= 0:
+        if not available_items:
             return jsonify({
                 'success': False,
-                'message': 'No units available to delete'
+                'message': 'No available items to delete'
             }), 400
 
-        # ลดจำนวนลง 1
-        new_quantity = current_quantity - 1
-        
-        # อัพเดตข้อมูลใน DynamoDB
+        # ลบ item ล่าสุดที่มีสถานะ Available
+        item_to_delete = available_items[-1]
+        for item in items:
+            if item['ItemID'] == item_to_delete['ItemID']:
+                item['Status'] = 'Deleted'
+                break
+
+        # อัพเดต Items list และ Quantity
         EquipmentTable.update_item(
             Key={'EquipmentID': equipment_id},
-            UpdateExpression='SET Quantity = :qty, StatusEquipment = :status',
+            UpdateExpression='SET Items = :items',
             ExpressionAttributeValues={
-                ':qty': new_quantity,
-                ':status': 'Available' if new_quantity > 0 else 'Not Available'
+                ':items': items
             }
         )
 
-        return jsonify({
-            'success': True,
-            'message': f'Successfully deleted 1 unit. Remaining: {new_quantity}'
-        })
+        # อัพเดต Quantity ตามจำนวน Items ที่ Available
+        if update_equipment_quantity(equipment_id):
+            available_count = sum(1 for item in items if item['Status'] == 'Available')
+            return jsonify({
+                'success': True,
+                'message': f'Successfully deleted 1 unit. Remaining: {available_count}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to update equipment quantity'
+            }), 500
 
     except Exception as e:
         print(f"Error in delete_equipment: {e}")
@@ -859,6 +890,34 @@ def generate_equipment_id(category):
     except Exception as e:
         print(f"Error generating equipment ID: {e}")
         return None
+
+
+@app.route('/get_item_list/<equipment_id>', methods=['GET'])
+def get_item_list(equipment_id):
+    try:
+        equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
+        
+        if 'Item' not in equipment:
+            return jsonify({
+                'success': False,
+                'message': 'Equipment not found'
+            }), 404
+
+        items = equipment['Item'].get('Items', [])
+        equipment_name = equipment['Item'].get('Name', '')
+        
+        return jsonify({
+            'success': True,
+            'items': items,
+            'equipment_name': equipment_name
+        })
+
+    except Exception as e:
+        print(f"Error getting item list: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Failed to get item list'
+        }), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
