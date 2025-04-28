@@ -434,15 +434,19 @@ def details_accessories():
 @app.route('/list', endpoint='list')
 def list_records():
     try:
-        user_id = session.get('username')  # Assuming user_id is stored in session
+        user_id = session.get('username')
         if not user_id:
             flash('You need to log in first.', 'info')
-            return redirect(url_for('login'))  # Redirect to login if user is not logged in
+            return redirect(url_for('login'))
 
         response = BorrowReturnRecordsTable.scan(
             FilterExpression=Attr('user_id').eq(user_id)
         )
         records = response['Items']
+        
+        # เรียงลำดับตามวันที่และเวลาล่าสุด
+        records.sort(key=lambda x: x['record_date'], reverse=True)
+        
         return render_template('list.html', records=records)
     except Exception as e:
         print(f"Error: {e}")
@@ -485,14 +489,13 @@ def return_item():
 @app.route('/admin_req')
 def admin_req():
     try:
-        # ดึงคำขอที่มี StatusReq เป็น Pending
         response = BorrowReturnRecordsTable.scan(
             FilterExpression=Attr('StatusReq').eq('Pending')
         )
         
         if 'Items' in response:
             records = response['Items']
-            # เรียงลำดับตามวันที่บันทึก (ล่าสุดขึ้นก่อน)
+            # เรียงลำดับตามวันที่และเวลาล่าสุด
             records.sort(key=lambda x: x['record_date'], reverse=True)
         else:
             records = []
@@ -572,13 +575,17 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
 @app.route('/admin_list')
 def admin_list():
     try:
-        user_id = session.get('username')  # Assuming user_id is stored in session
+        user_id = session.get('username')
         if not user_id:
             flash('You need to log in first.', 'info')
-            return redirect(url_for('login'))  # Redirect to login if user is not logged in
+            return redirect(url_for('login'))
 
         response = BorrowReturnRecordsTable.scan()
         records = response['Items']
+        
+        # เรียงลำดับตามวันที่และเวลาล่าสุด
+        records.sort(key=lambda x: x['record_date'], reverse=True)
+        
         return render_template('admin_list.html', records=records)
     except Exception as e:
         print(f"Error: {e}")
