@@ -378,13 +378,14 @@ def borrow_equipment(equipment_id):
         # Step 3: Create borrow request record
         local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
-        record_id = str(uuid.uuid4())
-        user_id = session.get('username')
+        record_id = generate_record_id()
+        if not record_id:
+            return jsonify(success=False, message="Failed to generate record ID"), 500
 
         BorrowReturnRecordsTable.put_item(
             Item={
                 'record_id': record_id,
-                'user_id': user_id,
+                'user_id': session.get('username'),
                 'equipment_id': equipment_id,
                 'equipment_name': equipment_item['Name'],
                 'RequestType': 'borrow',  # เพิ่ม RequestType
@@ -394,7 +395,6 @@ def borrow_equipment(equipment_id):
                 'isApprovedYet': 'false'
             }
         )
-
         return jsonify(success=True, message="Borrow request submitted successfully")
 
     except Exception as e:
@@ -459,7 +459,12 @@ def return_item():
         data = request.get_json()
         local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
-        record_id = str(uuid.uuid4())
+        record_id = generate_record_id()
+        if not record_id:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to generate record ID'
+            }), 500
         
         BorrowReturnRecordsTable.put_item(
             Item={
@@ -680,7 +685,13 @@ def admin_add_equipment():
                     }
                 )
             else:
-                equipment_id = str(uuid.uuid4())
+                equipment_id = generate_equipment_id(category)
+                if not equipment_id:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Failed to generate equipment ID'
+                    })
+                
                 EquipmentTable.put_item(
                     Item={
                         'EquipmentID': equipment_id,
@@ -763,6 +774,44 @@ def delete_equipment(equipment_id):
             'success': False,
             'message': f'Failed to delete equipment: {str(e)}'
         }), 500
+
+def generate_record_id():
+    try:
+        response = BorrowReturnRecordsTable.scan()
+        existing_records = response['Items']
+        max_id = 0
+        for record in existing_records:
+            if record['record_id'].startswith('record'):
+                current_id = int(record['record_id'][6:])  # ตัด 'record' ออกและแปลงเป็นตัวเลข
+                max_id = max(max_id, current_id)
+        new_id = f"record{(max_id + 1):03d}"  # เพิ่มเลขถัดไปและจัดรูปแบบให้มี 3 หลัก
+        return new_id
+    except Exception as e:
+        print(f"Error generating record ID: {e}")
+        return None
+
+def generate_equipment_id(category):
+    try:
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq(category)
+        )
+        existing_items = response['Items']
+        max_id = 0
+        prefix = {
+            'Cameras': 'cameras',
+            'Lenses': 'lenses',  # แก้จาก 'lense' เป็น 'lenses'
+            'Accessories': 'acc'
+        }.get(category, 'item')
+        
+        for item in existing_items:
+            if item['EquipmentID'].startswith(prefix):
+                current_id = int(item['EquipmentID'][len(prefix):])
+                max_id = max(max_id, current_id)
+        new_id = f"{prefix}{(max_id + 1):03d}"  # จะได้รูปแบบ lenses001, lenses002, ...
+        return new_id
+    except Exception as e:
+        print(f"Error generating equipment ID: {e}")
+        return None
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
