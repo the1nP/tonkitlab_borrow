@@ -853,6 +853,67 @@ def delete_equipment(equipment_id):
             'message': f'Failed to delete equipment: {str(e)}'
         }), 500
 
+@app.route('/delete_equipment_item/<equipment_id>/<item_id>', methods=['POST'])
+def delete_equipment_item(equipment_id, item_id):
+    try:
+        equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
+        
+        if 'Item' not in equipment:
+            return jsonify({
+                'success': False,
+                'message': 'Equipment not found'
+            }), 404
+
+        items = equipment['Item'].get('Items', [])
+        found = False
+        
+        # หา item และเปลี่ยนสถานะเป็น Deleted
+        for item in items:
+            if item['ItemID'] == item_id:
+                if item['Status'] != 'Available':
+                    return jsonify({
+                        'success': False,
+                        'message': 'Item is not available for deletion'
+                    }), 400
+                item['Status'] = 'Deleted'
+                found = True
+                break
+        
+        if not found:
+            return jsonify({
+                'success': False,
+                'message': 'Item not found'
+            }), 404
+
+        # อัพเดต Items list
+        EquipmentTable.update_item(
+            Key={'EquipmentID': equipment_id},
+            UpdateExpression='SET Items = :items',
+            ExpressionAttributeValues={
+                ':items': items
+            }
+        )
+
+        # อัพเดต Quantity
+        if update_equipment_quantity(equipment_id):
+            available_count = sum(1 for item in items if item['Status'] == 'Available')
+            return jsonify({
+                'success': True,
+                'message': f'Successfully deleted item. Remaining: {available_count}'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to update equipment quantity'
+            }), 500
+
+    except Exception as e:
+        print(f"Error in delete_equipment_item: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to delete item: {str(e)}'
+        }), 500
+
 def generate_record_id():
     try:
         response = BorrowReturnRecordsTable.scan()

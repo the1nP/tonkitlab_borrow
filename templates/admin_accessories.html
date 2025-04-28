@@ -48,14 +48,13 @@
                             <th>No.</th>
                             <th>Model</th>
                             <th>Status</th>
-                            <th>Quantity Left</th>                           
-                            <th>Member Only</th>
+                            <th>Quantity Left</th>                            <th>Member Only</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in items %}
-                        <tr>
+                        <tr class="parent-row">
                             <td>{{ loop.index }}</td>
                             <td>{{ item.Name }}</td>
                             <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'red' }};">
@@ -69,18 +68,34 @@
                                     <span class="icon-cross">&#10008;</span>
                                 {% endif %}
                             </td>
-                            <td>
-                                <button class="delete-btn" 
-                                        onclick="deleteEquipment('{{ item.EquipmentID }}', '{{ item.Name }}')"
-                                        {% if item.Quantity <= 0 %}disabled{% endif %}>
-                                    Delete
-                                </button>
-                                <!-- เพิ่มปุ่มในตาราง -->
+                            <td>                               
                                 <button class="view-items-btn" 
-                                        onclick="viewItemList('{{ item.EquipmentID }}', '{{ item.Name }}')"
+                                        onclick="toggleItems('{{ item.EquipmentID }}')"
                                         title="View Items">
                                     View Items
                                 </button>
+                            </td>
+                        </tr>
+                        <!-- Items dropdown row -->
+                        <tr id="items-{{ item.EquipmentID }}" class="items-row" style="display: none;">
+                            <td colspan="6">
+                                <div class="items-container">
+                                    <table class="items-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Item ID</th>
+                                                <th>Status</th>
+                                                <th>Borrower</th>
+                                                <th>Borrow Date</th>
+                                                <th>Due Date</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemList-{{ item.EquipmentID }}">
+                                            <!-- Items will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -141,6 +156,7 @@
                     <th>Borrower</th>
                     <th>Borrow Date</th>
                     <th>Due Date</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody id="itemListBody">
@@ -149,58 +165,108 @@
     </div>
 </div>
 
-<!-- เพิ่ม JavaScript -->
+<!-- แก้ไข JavaScript สำหรับแสดง Items และปุ่ม Delete -->
 <script>
-function viewItemList(equipmentId, equipmentName) {
-    fetch(`/get_item_list/${equipmentId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const modal = document.getElementById('itemListModal');
-                const modalTitle = document.getElementById('modalTitle');
-                const itemListBody = document.getElementById('itemListBody');
-                
-                modalTitle.textContent = `Items List - ${data.equipment_name}`;
-                itemListBody.innerHTML = '';
-                
-                data.items.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${item.ItemID}</td>
-                        <td style="color: ${item.Status === 'Available' ? 'green' : 
-                                         item.Status === 'Deleted' ? 'red' : 'orange'}">
-                            ${item.Status}
-                        </td>
-                        <td>${item.BorrowerID}</td>
-                        <td>${item.BorrowDate}</td>
-                        <td>${item.DueDate}</td>
-                    `;
-                    itemListBody.appendChild(row);
-                });
-                
-                modal.style.display = 'block';
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message
-                });
-            }
-        });
-}
+function toggleItems(equipmentId) {
+    const itemsRow = document.getElementById(`items-${equipmentId}`);
+    const button = event.currentTarget;
+    const allItemsRows = document.getElementsByClassName('items-row');
+    const allButtons = document.getElementsByClassName('view-items-btn');
 
-// ปิด Modal เมื่อคลิกที่ปุ่มปิดหรือคลิกนอก Modal
-const modal = document.getElementById('itemListModal');
-const span = document.getElementsByClassName('close')[0];
+    // Close all other rows first
+    Array.from(allItemsRows).forEach(row => {
+        if (row.id !== `items-${equipmentId}`) {
+            row.style.display = 'none';
+        }
+    });
+    
+    Array.from(allButtons).forEach(btn => {
+        btn.classList.remove('active');
+    });
 
-span.onclick = function() {
-    modal.style.display = 'none';
-}
-
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = 'none';
+    if (itemsRow.style.display === 'none') {
+        // Load items if not already loaded
+        fetch(`/get_item_list/${equipmentId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const itemListBody = document.getElementById(`itemList-${equipmentId}`);
+                    itemListBody.innerHTML = '';
+                    
+                    data.items.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.ItemID}</td>
+                            <td style="color: ${item.Status === 'Available' ? 'green' : 
+                                             item.Status === 'Deleted' ? 'red' : 'orange'}">
+                                ${item.Status}
+                            </td>
+                            <td>${item.BorrowerID}</td>
+                            <td>${item.BorrowDate}</td>
+                            <td>${item.DueDate}</td>
+                            <td>
+                                <button class="delete-btn" 
+                                        onclick="confirmDelete('${equipmentId}', '${item.ItemID}')"
+                                        ${item.Status !== 'Available' ? 'disabled' : ''}>
+                                    Delete
+                                </button>
+                            </td>
+                        `;
+                        itemListBody.appendChild(row);
+                    });
+                    
+                    itemsRow.style.display = 'table-row';
+                    button.classList.add('active');
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+                }
+            });
+    } else {
+        itemsRow.style.display = 'none';
+        button.classList.remove('active');
     }
+}
+
+function confirmDelete(equipmentId, itemId) {
+    Swal.fire({
+        title: 'Confirm Delete',
+        text: `Do you want to delete ${itemId}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#91766E',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/delete_equipment_item/${equipmentId}/${itemId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#91766E'
+                    }).then(() => {
+                        loadItems(equipmentId); // รีเฟรชรายการ Items
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonColor: '#91766E'
+                    });
+                }
+            });
+        }
+    });
 }
 </script>
 

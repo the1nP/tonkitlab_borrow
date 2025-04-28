@@ -274,14 +274,60 @@ main {
 }
 
 /* เพิ่มใน static/css/admin_camera.css, admin_lenses.css, admin_accessories.css */
-.delete-btn {
+.items-row td {
+    padding: 0;
+}
+
+.items-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    margin: 10px;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.items-table th, 
+.items-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.items-table th {
+    background-color: #91766E;
+    color: white;
+}
+
+.view-items-btn {
     padding: 8px 16px;
-    background-color: #d33;
+    background-color: #91766E;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s ease;
+}
+
+.view-items-btn:hover {
+    background-color: #7a635c;
+}
+
+.view-items-btn.active {
+    background-color: #7a635c;
+}
+
+.delete-btn {
+    padding: 4px 12px;
+    background-color: #d33;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .delete-btn:hover {
@@ -292,6 +338,7 @@ main {
     background-color: #cccccc;
     cursor: not-allowed;
 }
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .menu {
