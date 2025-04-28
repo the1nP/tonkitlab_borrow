@@ -7,7 +7,7 @@
     <title>ToolTrack</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_req.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -66,15 +66,9 @@
                             <td>{{ record.RequestType }}</td>
                             <td>{{ record.StatusReq }}</td>
                             <td>
-                                <button class="action-button" 
-                                        data-record-id="{{ record.record_id }}" 
-                                        data-equipment-id="{{ record.equipment_id }}" 
-                                        data-equipment-name="{{ record.equipment_name }}"
-                                        data-user-id="{{ record.user_id }}"
-                                        data-request-type="{{ record.RequestType }}">
-                                    {% if record.StatusReq == 'Pending' %}
-                                        Approve
-                                    {% endif %}
+                                <button onclick="approveRequest('{{ record.RequestType }}', '{{ record.equipment_name }}', '{{ record.equipment_id }}', '{{ record.user_id }}', '{{ record.record_id }}')" 
+                                        class="approve-button">
+                                    Approve
                                 </button>
                             </td>
                         </tr>
@@ -85,62 +79,62 @@
         </section>
     </main>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const actionButtons = document.querySelectorAll(".action-button");
+function approveRequest(reqType, equipmentName, equipmentId, userId, recordId) {
+    Swal.fire({
+        title: 'Confirm Approval',
+        text: `Are you sure you want to approve this ${reqType} request?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#91766E',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, approve it'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // แสดง loading
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Please wait',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading()
+                }
+            });
 
-        actionButtons.forEach(button => {
-            button.addEventListener("click", function () {
+            fetch(`/approve/${reqType}/${equipmentName}/${equipmentId}/${userId}/${recordId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message || `${reqType.charAt(0).toUpperCase() + reqType.slice(1)} request approved successfully`,
+                        icon: 'success',
+                        confirmButtonColor: '#91766E'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to approve request',
+                        icon: 'error',
+                        confirmButtonColor: '#91766E'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 Swal.fire({
-                    title: 'Are you sure?',
-                    text: "You won't be able to revert this!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, approve it!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const row = this.closest("tr");
-                        const recordId = this.getAttribute("data-record-id");
-                        const equipmentId = this.getAttribute("data-equipment-id");
-                        const userId = this.getAttribute("data-user-id");
-                        const reqType = this.getAttribute("request-type");
-                        const equipmentName = this.getAttribute("data-equipment-name");
-                        //console.log(recordId, equipmentId, userId);
-                        fetch(`/approve/${reqType}/${equipmentName}/${equipmentId}/${userId}/${recordId}`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json"
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                Swal.fire({
-                                    title: 'Approved!',
-                                    text: 'The record has been approved.',
-                                    icon: 'success'
-                                }).then(() => {
-                                    location.reload();  // Reload the page to reflect changes
-                                });
-                                //alert("Record approved successfully.");
-                                //location.reload();  // Reload the page to reflect changes
-                            } else {
-                                Swal.fire({
-                                    title: 'Failed!',
-                                    text: 'Failed to approve the record.',
-                                    icon: 'error'
-                                });
-                                //alert("Failed to approve the record.");
-                            }
-                        })
-                        .catch(error => console.error("Error:", error));
-                    }
+                    title: 'Error!',
+                    text: 'An unexpected error occurred',
+                    icon: 'error',
+                    confirmButtonColor: '#91766E'
                 });
             });
-        });
+        }
     });
-</script>
+}
 </script>
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}

@@ -388,7 +388,7 @@ def borrow_equipment(equipment_id):
                 'user_id': session.get('username'),
                 'equipment_id': equipment_id,
                 'equipment_name': equipment_item['Name'],
-                'RequestType': 'borrow',  # เพิ่ม RequestType
+                'RequestType': 'borrow',
                 'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
                 'due_date': '-',
                 'StatusReq': 'Pending',
@@ -457,26 +457,39 @@ def list_records():
 def return_item():
     try:
         data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['user_id', 'equipment_id', 'equipment_name', 'due_date', 'item_id']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({
+                    'success': False,
+                    'message': f'Missing required field: {field}'
+                }), 400
+
         local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
         record_id = generate_record_id()
+        
         if not record_id:
             return jsonify({
                 'success': False,
                 'message': 'Failed to generate record ID'
             }), 500
         
+        # Create return record with item_id
         BorrowReturnRecordsTable.put_item(
             Item={
                 'record_id': record_id,
                 'user_id': data['user_id'],
                 'equipment_id': data['equipment_id'],
                 'equipment_name': data['equipment_name'],
-                'RequestType': 'return',  # กำหนดค่า RequestType เป็น 'return'
+                'RequestType': 'return',
                 'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
                 'due_date': data['due_date'],
                 'StatusReq': 'Pending',
-                'isApprovedYet': 'false'
+                'isApprovedYet': 'false',
+                'item_id': data['item_id']  # Store the item_id
             }
         )
         
@@ -484,11 +497,12 @@ def return_item():
             'success': True,
             'message': 'Return request submitted successfully'
         })
+
     except Exception as e:
         print(f"Error in return_item: {e}")
         return jsonify({
             'success': False,
-            'message': 'Failed to submit return request'
+            'message': f'Failed to submit return request: {str(e)}'
         }), 500
 
 @app.route('/admin_req')
@@ -500,7 +514,6 @@ def admin_req():
         
         if 'Items' in response:
             records = response['Items']
-            # เรียงลำดับตามวันที่และเวลาล่าสุด
             records.sort(key=lambda x: x['record_date'], reverse=True)
         else:
             records = []
@@ -520,62 +533,125 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
         borrow_date = now.strftime('%Y-%m-%d %H:%M:%S')
         due_date = (now + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')
 
-        # อัพเดต StatusReq และ RequestType ใน BorrowReturnRecords
-        update_expression = "SET StatusReq = :s, isApprovedYet = :a"
-        expression_values = {
-            ':s': 'Approved',
-            ':a': 'true'
-        }
-
-        # เพิ่มการอัพเดต RequestType เมื่อเป็นการคืน
-        if reqType == 'return':
-            update_expression += ", RequestType = :r"
-            expression_values[':r'] = 'return'
-
-        BorrowReturnRecordsTable.update_item(
-            Key={'record_id': record_id},
-            UpdateExpression=update_expression,
-            ExpressionAttributeValues=expression_values
-        )
-
-        # อัพเดตจำนวน, StatusEquipment และ due_date ใน Equipment
+        # ดึงข้อมูล Equipment
         equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
-        if 'Item' in equipment:
-            current_quantity = int(equipment['Item'].get('Quantity', 0))
-            
-            if reqType == 'borrow':
-                new_quantity = current_quantity - 1
-                # อัพเดตข้อมูลการยืม
-                EquipmentTable.update_item(
-                    Key={'EquipmentID': equipment_id},
-                    UpdateExpression="SET Quantity = :q, StatusEquipment = :s, due_date = :d, BorrowDate = :bd, BorrowerID = :uid",
-                    ExpressionAttributeValues={
-                        ':q': new_quantity,
-                        ':s': 'Available' if new_quantity > 0 else 'Not Available',
-                        ':d': due_date,
-                        ':bd': borrow_date,
-                        ':uid': user_id
-                    }
-                )
-            elif reqType == 'return':
-                # ...existing return logic...
-                new_quantity = current_quantity + 1
-                EquipmentTable.update_item(
-                    Key={'EquipmentID': equipment_id},
-                    UpdateExpression="SET Quantity = :q, StatusEquipment = :s, due_date = :d, BorrowDate = :bd, BorrowerID = :uid",
-                    ExpressionAttributeValues={
-                        ':q': new_quantity,
-                        ':s': 'Available' if new_quantity > 0 else 'Not Available',
-                        ':d': '-',
-                        ':bd': '-',
-                        ':uid': '-'
-                    }
-                )
+        if 'Item' not in equipment:
+            return jsonify(success=False, message="Equipment not found"), 404
 
-        return jsonify(success=True)
+        items = equipment['Item'].get('Items', [])
+        
+        if reqType == 'borrow':
+            # หา available item สำหรับการยืม
+            available_item = None
+            for item in items:
+                if item['Status'] == 'Available':
+                    available_item = item
+                    break
+            
+            if not available_item:
+                return jsonify(success=False, message="No available items"), 400
+
+            # อัพเดตสถานะของ item ที่ถูกยืม
+            for item in items:
+                if item['ItemID'] == available_item['ItemID']:
+                    item['Status'] = 'Not Available'
+                    item['BorrowerID'] = user_id
+                    item['BorrowDate'] = borrow_date
+                    item['DueDate'] = due_date
+                    break
+
+            # นับจำนวน items ที่ยังคงมีสถานะ Available
+            available_count = sum(1 for item in items if item['Status'] == 'Available')
+
+            # อัพเดต Equipment table
+            EquipmentTable.update_item(
+                Key={'EquipmentID': equipment_id},
+                UpdateExpression="SET #items = :items, Quantity = :qty, StatusEquipment = :status",
+                ExpressionAttributeNames={
+                    '#items': 'Items'
+                },
+                ExpressionAttributeValues={
+                    ':items': items,
+                    ':qty': available_count,
+                    ':status': 'Available' if available_count > 0 else 'Not Available'
+                }
+            )
+
+            # อัพเดต BorrowReturnRecords และเพิ่ม item_id
+            BorrowReturnRecordsTable.update_item(
+                Key={'record_id': record_id},
+                UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, item_id = :iid",
+                ExpressionAttributeValues={
+                    ':s': 'Approved',
+                    ':a': 'true',
+                    ':iid': available_item['ItemID']
+                }
+            )
+
+        elif reqType == 'return':
+            # ดึงข้อมูล item_id จาก record
+            record = BorrowReturnRecordsTable.get_item(Key={'record_id': record_id})
+            if 'Item' not in record:
+                return jsonify(success=False, message="Record not found"), 404
+            
+            return_item_id = record['Item'].get('item_id')
+            if not return_item_id:
+                return jsonify(success=False, message="Item ID not found in record"), 400
+
+            # หา item ที่จะคืนและอัพเดตสถานะ
+            item_updated = False
+            for item in items:
+                if item['ItemID'] == return_item_id:
+                    item['Status'] = 'Available'
+                    item['BorrowerID'] = '-'
+                    item['BorrowDate'] = '-'
+                    item['DueDate'] = '-'
+                    item_updated = True
+                    break
+            
+            if not item_updated:
+                return jsonify(success=False, message="Item not found in equipment"), 404
+
+            # อัพเดต Equipment table
+            EquipmentTable.update_item(
+                Key={'EquipmentID': equipment_id},
+                UpdateExpression="SET #items = :items",
+                ExpressionAttributeNames={
+                    '#items': 'Items'
+                },
+                ExpressionAttributeValues={
+                    ':items': items
+                }
+            )
+
+            # นับจำนวน items ที่ยังคงมีสถานะ Available
+            available_count = sum(1 for item in items if item['Status'] == 'Available')
+
+            # อัพเดต Quantity และ StatusEquipment
+            EquipmentTable.update_item(
+                Key={'EquipmentID': equipment_id},
+                UpdateExpression="SET Quantity = :qty, StatusEquipment = :status",
+                ExpressionAttributeValues={
+                    ':qty': available_count,
+                    ':status': 'Available' if available_count > 0 else 'Not Available'
+                }
+            )
+
+            # อัพเดต BorrowReturnRecords
+            BorrowReturnRecordsTable.update_item(
+                Key={'record_id': record_id},
+                UpdateExpression="SET StatusReq = :s, isApprovedYet = :a",
+                ExpressionAttributeValues={
+                    ':s': 'Approved',
+                    ':a': 'true'
+                }
+            )
+
+        return jsonify(success=True, message="Request approved successfully")
+
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify(success=False), 500
+        print(f"Error in approve_record: {e}")
+        return jsonify(success=False, message=str(e)), 500
 
 @app.route('/admin_list')
 def admin_list():
@@ -867,15 +943,15 @@ def delete_equipment_item(equipment_id, item_id):
         items = equipment['Item'].get('Items', [])
         found = False
         
-        # หา item และเปลี่ยนสถานะเป็น Deleted
-        for item in items:
+        # หา item และลบออกจาก items list
+        for i, item in enumerate(items):
             if item['ItemID'] == item_id:
                 if item['Status'] != 'Available':
                     return jsonify({
                         'success': False,
                         'message': 'Item is not available for deletion'
                     }), 400
-                item['Status'] = 'Deleted'
+                items.pop(i)  # ลบ item ออกจาก list
                 found = True
                 break
         
@@ -885,7 +961,7 @@ def delete_equipment_item(equipment_id, item_id):
                 'message': 'Item not found'
             }), 404
 
-        # อัพเดต Items list โดยใช้ ExpressionAttributeNames
+        # อัพเดต Items list ใน DynamoDB
         EquipmentTable.update_item(
             Key={'EquipmentID': equipment_id},
             UpdateExpression='SET #items = :items',
@@ -899,7 +975,7 @@ def delete_equipment_item(equipment_id, item_id):
 
         # อัพเดต Quantity
         if update_equipment_quantity(equipment_id):
-            available_count = sum(1 for item in items if item['Status'] == 'Available')
+            available_count = len(items)  # นับจำนวน items ที่เหลือ
             return jsonify({
                 'success': True,
                 'message': f'Successfully deleted item. Remaining: {available_count}'
