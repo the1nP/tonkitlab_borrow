@@ -70,7 +70,6 @@
                             <th>Model</th>
                             <th>Status</th>
                             <th>Quantity</th>
-                            <th>Due Date</th>
                             <th>Member Only</th>
                             <th>Action</th>
                         </tr>
@@ -84,7 +83,6 @@
                                 {{ item.StatusEquipment }}
                             </td>
                             <td>{{ item.Quantity }}</td>
-                            <td>{{ item.DueDate if item.DueDate else '-' }}</td>
                             <td>
                                 {% if item.isMemberRequired == 'yes' %}
                                     <span class="icon-check">&#10004;</span>
