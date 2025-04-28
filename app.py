@@ -645,6 +645,24 @@ def admin_camera():
         print(f"Error: {e}")
         return "An error occurred while fetching data from DynamoDB."
 
+def generate_item_ids(equipment_id, start_number, quantity):
+    """สร้าง ItemID สำหรับแต่ละชิ้นของอุปกรณ์"""
+    try:
+        item_ids = []
+        for i in range(quantity):
+            item_id = f"{equipment_id}-{(start_number + i):03d}"
+            item_ids.append({
+                'ItemID': item_id,
+                'Status': 'Available',
+                'BorrowerID': '-',
+                'BorrowDate': '-',
+                'DueDate': '-'
+            })
+        return item_ids
+    except Exception as e:
+        print(f"Error generating item IDs: {e}")
+        return None
+
 @app.route('/admin_add_equipment', methods=['GET', 'POST'])
 def admin_add_equipment():
     if request.method == 'POST':
@@ -660,31 +678,56 @@ def admin_add_equipment():
                     'message': 'All fields are required.'
                 })
 
+            # ตรวจสอบว่ามีอุปกรณ์ชื่อนี้อยู่แล้วหรือไม่
             response = EquipmentTable.scan(
                 FilterExpression=Attr('Name').eq(name) & Attr('Category').eq(category)
             )
             items = response['Items']
 
             if items:
+                # ถ้ามีอุปกรณ์อยู่แล้ว ใช้ EquipmentID เดิม
                 existing_item = items[0]
+                equipment_id = existing_item['EquipmentID']
                 current_quantity = int(existing_item.get('Quantity', 0))
+                existing_items = existing_item.get('Items', [])
+                
+                # หาเลขลำดับ ItemID ล่าสุด
+                max_item_number = 0
+                for item in existing_items:
+                    item_number = int(item['ItemID'].split('-')[-1])
+                    max_item_number = max(max_item_number, item_number)
+                
+                # สร้าง ItemID ใหม่ต่อจากเลขเดิม
+                new_items = generate_item_ids(equipment_id, max_item_number + 1, quantity)
+                if not new_items:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Failed to generate item IDs'
+                    })
+                
+                # รวม items เก่าและใหม่
+                all_items = existing_items + new_items
                 new_quantity = current_quantity + quantity
 
+                # อัพเดตข้อมูลในตาราง
                 EquipmentTable.update_item(
-                    Key={'EquipmentID': existing_item['EquipmentID']},
-                    UpdateExpression='SET #qty = :new_qty, #st = :new_status, #member = :member_req',
+                    Key={'EquipmentID': equipment_id},
+                    UpdateExpression='SET #qty = :new_qty, #st = :new_status, #member = :member_req, #items = :items',
                     ExpressionAttributeNames={
                         '#qty': 'Quantity',
                         '#st': 'StatusEquipment',
-                        '#member': 'isMemberRequired'
+                        '#member': 'isMemberRequired',
+                        '#items': 'Items'
                     },
                     ExpressionAttributeValues={
                         ':new_qty': new_quantity,
-                        ':new_status': 'Available' if new_quantity > 0 else 'Not Available',
-                        ':member_req': isMemberRequired
+                        ':new_status': 'Available',
+                        ':member_req': isMemberRequired,
+                        ':items': all_items
                     }
                 )
             else:
+                # ถ้าเป็นอุปกรณ์ใหม่ สร้าง EquipmentID ใหม่
                 equipment_id = generate_equipment_id(category)
                 if not equipment_id:
                     return jsonify({
@@ -692,16 +735,23 @@ def admin_add_equipment():
                         'message': 'Failed to generate equipment ID'
                     })
                 
+                # สร้าง ItemID สำหรับทุกชิ้น
+                items = generate_item_ids(equipment_id, 1, quantity)
+                if not items:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Failed to generate item IDs'
+                    })
+
+                # เพิ่มข้อมูลใหม่
                 EquipmentTable.put_item(
                     Item={
                         'EquipmentID': equipment_id,
                         'Name': name,
                         'Category': category,
-                        'StatusEquipment': 'Available' if quantity > 0 else 'Not Available',
+                        'StatusEquipment': 'Available',
                         'Quantity': quantity,
-                        'DueDate': '-',
-                        'BorrowerID': '-',
-                        'BorrowDate': '-',
+                        'Items': items,
                         'isMemberRequired': isMemberRequired
                     }
                 )
@@ -714,9 +764,6 @@ def admin_add_equipment():
             return jsonify({
                 'success': True,
                 'message': f'Success! Added {quantity} units of {name}',
-                'name': name,
-                'quantity': quantity,
-                'isUpdate': False,
                 'redirect': redirect_url
             })
 
@@ -724,7 +771,7 @@ def admin_add_equipment():
             print(f"Error in admin_add_equipment: {e}")
             return jsonify({
                 'success': False,
-                'message': 'Failed to add equipment. Please try again.'
+                'message': f'Failed to add equipment: {str(e)}'
             })
 
     return render_template('admin_add_equipment.html')
