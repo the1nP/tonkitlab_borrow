@@ -7,7 +7,7 @@
     <title>ToolTrack</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_accessories.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -48,9 +48,9 @@
                             <th>No.</th>
                             <th>Model</th>
                             <th>Status</th>
-                            <th>Quantity Left</th>
-                            <th>Due Date</th>
+                            <th>Quantity Left</th>                           
                             <th>Member Only</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -61,14 +61,20 @@
                             <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'red' }};">
                                 {{ item.StatusEquipment }}
                             </td>
-                            <td>{{ item.Quantity }}</td>
-                            <td>{{ item.get('DueDate', '-') }}</td>
+                            <td>{{ item.Quantity }}</td>                            
                             <td>
                                 {% if item.isMemberRequired == 'yes' %}
                                     <span class="icon-check">&#10004;</span>
                                 {% else %}
                                     <span class="icon-cross">&#10008;</span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <button class="delete-btn" 
+                                        onclick="deleteEquipment('{{ item.EquipmentID }}', '{{ item.Name }}')"
+                                        {% if item.Quantity <= 0 %}disabled{% endif %}>
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -77,6 +83,43 @@
             </div>
         </section>
     </main>
-    
+    <!-- เพิ่ม JavaScript สำหรับการลบ -->
+<script>
+    function deleteEquipment(equipmentId, equipmentName) {
+        Swal.fire({
+            title: 'Confirm Delete',
+            text: `Do you want to delete 1 unit of ${equipmentName}?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#91766E',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/delete_equipment/${equipmentId}`, {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire(
+                            'Deleted!',
+                            data.message,
+                            'success'
+                        ).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire(
+                            'Error!',
+                            data.message,
+                            'error'
+                        );
+                    }
+                });
+            }
+        });
+    }
+    </script>
 </body>
 </html>

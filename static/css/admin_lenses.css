@@ -273,7 +273,26 @@ main {
     font-weight: bold;
     font-size: 16px;
 }
- 
+
+/* เพิ่มใน static/css/admin_camera.css, admin_lenses.css, admin_accessories.css */
+.delete-btn {
+    padding: 8px 16px;
+    background-color: #d33;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.delete-btn:hover {
+    background-color: #bf2020;
+}
+
+.delete-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
 /* Responsive Design */
 @media (max-width: 768px) {
     .menu {

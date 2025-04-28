@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ToolTrack</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/detailscamera.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_camera.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
-
+    <!-- เพิ่ม SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
@@ -49,8 +50,8 @@
                             <th>Model</th>
                             <th>Status</th>
                             <th>Quantity Left</th>
-                            <th>Due Date</th>
                             <th>Member Only</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -62,13 +63,19 @@
                                 {{ item.StatusEquipment }}
                             </td>
                             <td>{{ item.Quantity }}</td>
-                            <td>{{ item.get('DueDate', '-') }}</td>
                             <td>
                                 {% if item.isMemberRequired == 'yes' %}
                                     <span class="icon-check">&#10004;</span>
                                 {% else %}
                                     <span class="icon-cross">&#10008;</span>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <button class="delete-btn" 
+                                        onclick="confirmDelete('{{ item.EquipmentID }}', '{{ item.Name }}')"
+                                        {% if item.Quantity <= 0 %}disabled{% endif %}>
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -77,6 +84,47 @@
             </div>
         </section>
     </main>
-    
+
+<!-- เพิ่ม script สำหรับ confirmation dialog -->
+<script>
+function confirmDelete(EquipmentId, Name) {
+    Swal.fire({
+        title: 'Confirm Delete',
+        text: `Do you want to delete 1 unit of ${Name}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#91766E',
+        cancelButtonColor: '#d33'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/delete_equipment/${EquipmentId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#91766E'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: data.message || 'Failed to delete equipment',
+                        icon: 'error',
+                        confirmButtonColor: '#91766E'
+                    });
+                }
+            });
+        }
+    });
+}
+</script>
 </body>
 </html>

@@ -711,5 +711,51 @@ def admin_add_equipment():
 
     return render_template('admin_add_equipment.html')
 
+@app.route('/delete_equipment/<equipment_id>', methods=['POST'])
+def delete_equipment(equipment_id):
+    try:
+        # ดึงข้อมูลอุปกรณ์
+        equipment = EquipmentTable.get_item(Key={'EquipmentID': equipment_id})
+        
+        if 'Item' not in equipment:
+            return jsonify({
+                'success': False,
+                'message': 'Equipment not found'
+            }), 404
+
+        # แก้ไขจาก equipment['Name'] เป็น equipment['Item']
+        current_quantity = int(equipment['Item'].get('Quantity', 0))
+        
+        if current_quantity <= 0:
+            return jsonify({
+                'success': False,
+                'message': 'No units available to delete'
+            }), 400
+
+        # ลดจำนวนลง 1
+        new_quantity = current_quantity - 1
+        
+        # อัพเดตข้อมูลใน DynamoDB
+        EquipmentTable.update_item(
+            Key={'EquipmentID': equipment_id},
+            UpdateExpression='SET Quantity = :qty, StatusEquipment = :status',
+            ExpressionAttributeValues={
+                ':qty': new_quantity,
+                ':status': 'Available' if new_quantity > 0 else 'Not Available'
+            }
+        )
+
+        return jsonify({
+            'success': True,
+            'message': f'Successfully deleted 1 unit. Remaining: {new_quantity}'
+        })
+
+    except Exception as e:
+        print(f"Error in delete_equipment: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to delete equipment: {str(e)}'
+        }), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
