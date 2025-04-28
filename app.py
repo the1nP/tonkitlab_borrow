@@ -885,10 +885,13 @@ def delete_equipment_item(equipment_id, item_id):
                 'message': 'Item not found'
             }), 404
 
-        # อัพเดต Items list
+        # อัพเดต Items list โดยใช้ ExpressionAttributeNames
         EquipmentTable.update_item(
             Key={'EquipmentID': equipment_id},
-            UpdateExpression='SET Items = :items',
+            UpdateExpression='SET #items = :items',
+            ExpressionAttributeNames={
+                '#items': 'Items'
+            },
             ExpressionAttributeValues={
                 ':items': items
             }
@@ -966,6 +969,9 @@ def get_item_list(equipment_id):
 
         items = equipment['Item'].get('Items', [])
         equipment_name = equipment['Item'].get('Name', '')
+        
+        # เรียงลำดับตาม ItemID
+        items.sort(key=lambda x: x['ItemID'])
         
         return jsonify({
             'success': True,

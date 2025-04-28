@@ -135,21 +135,22 @@ function toggleItems(equipmentId) {
                     
                     data.items.forEach(item => {
                         const row = document.createElement('tr');
+                        const statusColor = item.Status === 'Available' ? 'green' : 
+                                          item.Status === 'Deleted' ? 'red' : 'orange';
                         row.innerHTML = `
                             <td>${item.ItemID}</td>
-                            <td style="color: ${item.Status === 'Available' ? 'green' : 
-                                             item.Status === 'Deleted' ? 'red' : 'orange'}">
-                                ${item.Status}
-                            </td>
+                            <td style="color: ${statusColor}">${item.Status}</td>
                             <td>${item.BorrowerID}</td>
                             <td>${item.BorrowDate}</td>
                             <td>${item.DueDate}</td>
                             <td>
-                                <button class="delete-btn" 
-                                        onclick="confirmDelete('${equipmentId}', '${item.ItemID}')"
-                                        ${item.Status !== 'Available' ? 'disabled' : ''}>
-                                    Delete
-                                </button>
+                                ${item.Status === 'Available' ? 
+                                    `<button class="delete-btn" 
+                                            onclick="confirmDelete('${equipmentId}', '${item.ItemID}', '${data.equipment_name}')">
+                                        Delete
+                                    </button>` : 
+                                    '<button class="delete-btn" disabled>Delete</button>'
+                                }
                             </td>
                         `;
                         itemListBody.appendChild(row);
@@ -171,15 +172,16 @@ function toggleItems(equipmentId) {
     }
 }
 
-function confirmDelete(equipmentId, itemId) {
+function confirmDelete(equipmentId, itemId, equipmentName) {
     Swal.fire({
         title: 'Confirm Delete',
-        text: `Do you want to delete ${itemId}?`,
+        html: `Are you sure you want to delete <br><strong>${itemId}</strong><br> of ${equipmentName}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#91766E',
         cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, delete it'
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel'
     }).then((result) => {
         if (result.isConfirmed) {
             fetch(`/delete_equipment_item/${equipmentId}/${itemId}`, {
@@ -204,6 +206,15 @@ function confirmDelete(equipmentId, itemId) {
                         confirmButtonColor: '#91766E'
                     });
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An unexpected error occurred',
+                    icon: 'error',
+                    confirmButtonColor: '#91766E'
+                });
             });
         }
     });
