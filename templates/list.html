@@ -72,16 +72,17 @@
                     else 'red' }};">{{ record.StatusReq }}</td>
                         <td>{{ record.due_date }}</td>
                         <td>
-                            {% if record.RequestType == 'borrow' and record.StatusReq == 'Approved' %}
-                                <button onclick="returnItem('{{ record.user_id }}', 
-                                                          '{{ record.equipment_id }}', 
-                                                          '{{ record.equipment_name }}', 
-                                                          '{{ record.due_date }}', 
-                                                          '{{ record.item_id }}')" 
-                                        class="return-button">
-                                    Return
-                                </button>
-                            {% endif %}
+                            <button onclick="returnItem('{{ record.user_id }}', 
+                                                      '{{ record.equipment_id }}', 
+                                                      '{{ record.equipment_name }}', 
+                                                      '{{ record.due_date }}', 
+                                                      '{{ record.item_id }}')" 
+                                    class="return-button"
+                                    {% if not (record.RequestType == 'borrow' and record.StatusReq == 'Approved') %}
+                                        disabled
+                                    {% endif %}>
+                                Return
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}

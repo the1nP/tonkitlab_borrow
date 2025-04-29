@@ -134,52 +134,6 @@ ul.menu li a:hover {
     gap: 20px; /* เพิ่มระยะห่างระหว่างไอคอนแจ้งเตือนและผู้ใช้ */
 }
 
-/* Notification Dropdown */
-.notification-dropdown {
-    display: none; /* ซ่อนเมนูเริ่มต้น */
-    position: absolute; /* วางเมนูไว้ใต้ไอคอน */
-    top: 50px; /* ระยะห่างจากไอคอน */
-    right: 0; /* จัดชิดขวา */
-    width: 300px; /* ความกว้างของเมนู */
-    background-color: #fff; /* สีพื้นหลัง */
-    border: 1px solid #ccc; /* เส้นขอบ */
-    border-radius: 5px; /* ขอบโค้งมน */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
-    z-index: 1000; /* ให้เมนูอยู่ด้านหน้า */
-    font-family: Arial, sans-serif;
-    text-align: left;
-}
-
-.notification-dropdown h4 {
-    margin: 0;
-    padding: 10px;
-    background-color: #91766E;
-    color: white;
-    font-size: 18px;
-    border-bottom: 1px solid #ccc;
-}
-
-.notification-dropdown ul {
-    list-style: none;
-    margin: 0;
-    padding: 10px;
-}
-
-.notification-dropdown ul li {
-    padding: 8px 10px;
-    font-size: 14px;
-    color: #555;
-    border-bottom: 1px solid #eee;
-}
-
-.notification-dropdown ul li:last-child {
-    border-bottom: none;
-}
-
-.notification-dropdown ul li:hover {
-    background-color: #f5f5f5;
-    cursor: pointer;
-}
 /* Main Section */
 main {
     padding: 20px;
@@ -320,4 +274,53 @@ main {
 
 .add-equipment-button:hover {
     background-color: #75554E;
+}
+
+
+
+/* Notification Dropdown */
+.notification-dropdown {
+    display: none; /* ซ่อนเมนูเริ่มต้น */
+    position: absolute; /* วางเมนูไว้ใต้ไอคอน */
+    top: 50px; /* ระยะห่างจากไอคอน */
+    right: 0; /* จัดชิดขวา */
+    width: 300px; /* ความกว้างของเมนู */
+    background-color: #fff; /* สีพื้นหลัง */
+    border: 1px solid #ccc; /* เส้นขอบ */
+    border-radius: 5px; /* ขอบโค้งมน */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
+    z-index: 1000; /* ให้เมนูอยู่ด้านหน้า */
+    font-family: Arial, sans-serif;
+    text-align: left;
+}
+
+.notification-dropdown h4 {
+    margin: 0;
+    padding: 10px;
+    background-color: #91766E;
+    color: white;
+    font-size: 18px;
+    border-bottom: 1px solid #ccc;
+}
+
+.notification-dropdown ul {
+    list-style: none;
+    margin: 0;
+    padding: 10px;
+}
+
+.notification-dropdown ul li {
+    padding: 8px 10px;
+    font-size: 14px;
+    color: #555;
+    border-bottom: 1px solid #eee;
+}
+
+.notification-dropdown ul li:last-child {
+    border-bottom: none;
+}
+
+.notification-dropdown ul li:hover {
+    background-color: #f5f5f5;
+    cursor: pointer;
 }

@@ -51,7 +51,6 @@ ul.menu li a:hover {
     color: #000000;
 }
 
-
  /* Notification Icon */
  .notification {
     position: relative; /* ใช้สำหรับวาง badge */
@@ -142,7 +141,7 @@ main {
 
 .request h1 {
     font-family: 'Playfair Display', serif;
-    font-size: 36px;
+    font-size: 50px;
     color: #333;
     margin-bottom: 20px;
 }
