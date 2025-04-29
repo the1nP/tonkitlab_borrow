@@ -184,13 +184,32 @@ main {
     transition: background-color 0.3s ease;
 }
 
-.request-table .action-button:hover {
-    background-color: #75554E;
+.approve-button {
+    background-color: #91766E;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
 
-.request-table .action-button:disabled {
-    background-color: #ccc;
+.approve-button:hover {
+    background-color: #7a635c;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.approve-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.approve-button:disabled {
+    background-color: #cccccc;
     cursor: not-allowed;
+    transform: none;
 }
 
 .logout-button {

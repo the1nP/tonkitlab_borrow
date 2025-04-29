@@ -104,57 +104,7 @@ ul.menu li a:hover {
     gap: 20px; /* เพิ่มระยะห่างระหว่างไอคอนแจ้งเตือนและผู้ใช้ */
 }
 
-/* Notification Dropdown */
-.notification-dropdown {
-    display: none; /* ซ่อนเมนูเริ่มต้น */
-    position: absolute; /* วางเมนูไว้ใต้ไอคอน */
-    top: 50px; /* ระยะห่างจากไอคอน */
-    right: 0; /* จัดชิดขวา */
-    width: 300px; /* ความกว้างของเมนู */
-    background-color: #fff; /* สีพื้นหลัง */
-    border: 1px solid #ccc; /* เส้นขอบ */
-    border-radius: 5px; /* ขอบโค้งมน */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
-    z-index: 1000; /* ให้เมนูอยู่ด้านหน้า */
-    font-family: Arial, sans-serif;
-    text-align: left;
-}
 
-.notification-dropdown h4 {
-    margin: 0;
-    padding: 10px;
-    background-color: #91766E;
-    color: white;
-    font-size: 18px;
-    border-bottom: 1px solid #ccc;
-}
-
-.notification-dropdown ul {
-    list-style: none;
-    margin: 0;
-    padding: 10px;
-}
-
-.notification-dropdown ul li {
-    padding: 8px 10px;
-    font-size: 14px;
-    color: #555;
-    border-bottom: 1px solid #eee;
-}
-
-.notification-dropdown ul li:last-child {
-    border-bottom: none;
-}
-
-.notification-dropdown ul li:hover {
-    background-color: #f5f5f5;
-    cursor: pointer;
-}
-/* Notification Icon Hover */
-.notification img:hover {
-    filter: brightness(0); /* เปลี่ยนไอคอนให้เป็นสีดำ */
-    cursor: pointer;
-}
 
 /* Profile Icon Hover */
 .user img:hover {
@@ -187,73 +137,53 @@ ul.menu li a:hover {
 .equipment-list {
     width: 100%;
     border-collapse: collapse;
-    font-family: Arial, sans-serif;
-    font-size: 16px;
     margin-top: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
-.equipment-list thead th {
+.equipment-list th,
+.equipment-list td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.equipment-list th {
     background-color: #91766E;
     color: white;
-    padding: 10px;
-    text-align: center;
+    font-weight: 500;
 }
 
-.equipment-list tbody td {
-    padding: 10px;
-    border: 1px solid #ddd;
-    text-align: center;
+.equipment-list tr:hover {
+    background-color: #f5f5f5;
 }
 
-.equipment-list tbody tr:nth-child(even) {
-    background-color: #f9f9f9;
-}
-
-.equipment-list tbody tr:hover {
-    background-color: #f1f1f1;
-}
 
 /* Button Styles */
-.return-btn {
-    padding: 8px 12px;
-    font-size: 14px;
-    color: white;
-    background-color: #75554E;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.return-btn:hover {
+.return-button {
     background-color: #91766E;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
 
-.return-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
+.return-button:hover {
+    background-color: #7a635c;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
-.username a:hover {
-    color: #000000; /* เปลี่ยนเป็นสีดำ */
-    text-decoration: underline; /* เพิ่มเส้นใต้เมื่อชี้เม้าส์ */
- }
- 
- .logout-button {
-    display: inline-block;
-    padding: 10px 20px;
-    margin: 10px 0;
-    font-size: 16px;
-    font-weight: bold;
-    color: #fff;
-    background-color: #ff4b5c;
-    border: none;
-    border-radius: 5px;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
- }
- 
- .logout-button:hover {
-    background-color: #ff1f3a;
- }
+
+.return-button:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.return-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
