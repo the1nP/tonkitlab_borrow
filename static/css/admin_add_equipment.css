@@ -1,75 +1,90 @@
 /* General Styles */
 body {
-    font-family: Arial, sans-serif;
     margin: 0;
-    padding: 0;
-    background-color: #f9f9f9;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #ffffff;
 }
 
 header {
-    background-color: #91766E;
-    padding: 10px 20px;
-    color: white;
+    border-bottom: 1px solid #91766E;
 }
 
+/* Navigation Bar */
 nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #91766E;
+    height: 60px;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+nav .logo img {
+    height: 140px;
 }
 
 ul.menu {
     list-style: none;
-    margin: 0;
+    margin: 0 auto;
     padding: 0;
     display: flex;
-    gap: 20px;
+    align-items: center;
 }
 
 ul.menu li {
-    display: inline-block;
+    margin: 0 15px;
 }
 
 ul.menu li a {
     text-decoration: none;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
+    color: #F6ece3;
+    font-size: 35px;
     padding: 10px 15px;
-    transition: background-color 0.3s ease;
+    transition: color 0.3s ease;
+    font-family: 'Playfair Display';
+    text-shadow: #000000;
 }
 
 ul.menu li a:hover {
-    background-color: #75554E;
-    border-radius: 5px;
+    color: #000000;
 }
 
+/* User Section */
 .user-section {
     display: flex;
     align-items: center;
-    gap: 20px;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .user img {
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
 }
 
+.username {
+    margin-right: 15px;
+}
+
 .username a {
-    text-decoration: none;
-    font-size: 16px;
     color: white;
+    text-decoration: none;
     font-weight: bold;
 }
 
 .logout-button {
-    text-decoration: none;
-    font-size: 14px;
-    color: white;
     background-color: #d9534f;
-    padding: 5px 10px;
-    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
     transition: background-color 0.3s ease;
 }
 
@@ -79,69 +94,74 @@ ul.menu li a:hover {
 
 /* Add Equipment Section */
 .add-equipment {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 20px;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
     background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .add-equipment h1 {
-    text-align: center;
-    font-size: 28px;
+    font-family: 'Playfair Display', serif;
+    font-size: 50px;
     color: #333;
-    margin-bottom: 10px;
+    margin-bottom: 30px;
 }
 
 .add-equipment .form-description {
-    text-align: center;
-    font-size: 16px;
-    color: #555;
-    margin-bottom: 20px;
-}
-
-.add-equipment form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 30px;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    margin-bottom: 25px;
+    text-align: left;
 }
 
 .form-group label {
+    display: block;
     font-weight: bold;
-    color: #555;
+    color: #333;
+    margin-bottom: 8px;
 }
 
 .form-group input,
 .form-group select {
-    padding: 10px;
+    width: 100%;
+    padding: 12px;
     font-size: 16px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 4px;
+    transition: border-color 0.3s ease;
 }
 
-.form-group input::placeholder {
-    color: #aaa;
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #91766E;
 }
 
 .submit-button {
     background-color: #91766E;
     color: white;
     border: none;
-    padding: 10px 15px;
+    padding: 12px 24px;
     font-size: 16px;
     font-weight: bold;
-    border-radius: 5px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
 }
 
 .submit-button:hover {
-    background-color: #75554E;
+    background-color: #7a635c;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.submit-button:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
