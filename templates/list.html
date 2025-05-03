@@ -78,7 +78,7 @@
                                 {{ record.due_date }}
                             {% endif %}
                         </td>
-                        <td>{{ record.get('ReturnDate', '-') }}</td>
+                        <td>{{ record.get('return_date', '-') }}</td>
                         <td>{{ record.RequestType }}</td>
                         <td style="color: {{ 'green' if record.StatusReq == 'Approved' 
                             else 'orange' if record.StatusReq == 'Pending' 

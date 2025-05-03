@@ -599,6 +599,11 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
             if not return_item_id:
                 return jsonify(success=False, message="Item ID not found in record"), 400
 
+            # เพิ่มวันที่ return ในปัจจุบัน
+            local_tz = pytz.timezone('Asia/Bangkok')
+            now = datetime.now(local_tz)
+            return_date = now.strftime('%Y-%m-%d %H:%M:%S')
+
             # หา item ที่จะคืนและอัพเดตสถานะ
             item_updated = False
             for item in items:
@@ -625,7 +630,7 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
                 }
             )
 
-            # นับจำนวน items ที่ยังคงมีสถานะ Available
+# นับจำนวน items ที่ยังคงมีสถานะ Available
             available_count = sum(1 for item in items if item['Status'] == 'Available')
 
             # อัพเดต Quantity และ StatusEquipment
@@ -641,10 +646,11 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
             # อัพเดต BorrowReturnRecords
             BorrowReturnRecordsTable.update_item(
                 Key={'record_id': record_id},
-                UpdateExpression="SET StatusReq = :s, isApprovedYet = :a",
+                UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, return_date = :rd",
                 ExpressionAttributeValues={
                     ':s': 'Approved',
-                    ':a': 'true'
+                    ':a': 'true',
+                    ':rd': return_date
                 }
             )
 

@@ -63,7 +63,7 @@
                             <td>{{ record.record_date }}</td>
                             <td>{{ record.equipment_name }}</td>
                             <td>{{ record.due_date }}</td>
-                            <td>{{ record.get('ReturnDate', '-') }}</td>
+                            <td>{{ record.get('return_date', '-') }}</td>
                             <td>{{ record.RequestType }}</td>
                             <td style="color: {{ 'green' if record.StatusReq == 'Approved' 
                                                 else 'yellow' if record.StatusReq == 'Pending' 

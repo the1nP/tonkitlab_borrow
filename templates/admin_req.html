@@ -74,7 +74,7 @@
                                     {{ record.due_date }}
                                 {% endif %}
                             </td>
-                            <td>{{ record.ReturnDate }} </td>
+                            <td>{{ record.get('return_date', '-') }}</td>
                             <td>{{ record.RequestType }}</td>
                             <td>{{ record.StatusReq }}</td>
                             <td>
