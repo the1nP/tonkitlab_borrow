@@ -96,21 +96,43 @@ def equipment_page():
 
 @app.route('/profile', endpoint='profile')
 def profile_page():
-    username = session.get('username')
-    access_token = session.get('access_token')
-    if not username or not access_token:
-        flash('You need to log in first.', 'error')
-        return redirect(url_for('login'))
     try:
-        response = cognito.get_user(
-            AccessToken=access_token
-        )
+        username = session.get('username')
+        access_token = session.get('access_token')
+        if not username or not access_token:
+            flash('You need to log in first.', 'error')
+            return redirect(url_for('login'))
+
+        # สร้าง S3 client
+        s3 = boto3.client('s3', region_name='us-east-1')
+        bucket_name = 'your-bucket-name'  # เปลี่ยนเป็นชื่อ bucket ของคุณ
+
+        # ดึงข้อมูลผู้ใช้จาก Cognito
+        response = cognito.get_user(AccessToken=access_token)
         user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
+        
+        # สร้าง presigned URL สำหรับรูปโปรไฟล์
+        profile_image_url = None
+        try:
+            profile_key = f"profile-images/{username}.jpg"  # หรือนามสกุลไฟล์อื่นๆ ตามที่คุณใช้
+            profile_image_url = s3.generate_presigned_url('get_object',
+                Params={'Bucket': bucket_name, 'Key': profile_key},
+                ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
+            )
+        except Exception as e:
+            print(f"Error getting profile image: {e}")
+            profile_image_url = url_for('static', filename='images/profile.png')  # ใช้รูปเริ่มต้นถ้าไม่มีรูปใน S3
+
         user_info = {
             'username': username,
             'email': user_attributes.get('email'),
             'fullname': user_attributes.get('name'),
             'phone': user_attributes.get('phone_number'),
+            'faculty': user_attributes.get('custom:faculty'),
+            'student_id': user_attributes.get('custom:student_id'),
+            'club_member': user_attributes.get('custom:club_member'),
+            'dob': user_attributes.get('custom:dob'),
+            'profile_image': profile_image_url
         }
 
         # ตรวจสอบว่าเป็นแอดมินหรือไม่
