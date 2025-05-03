@@ -180,10 +180,10 @@ ul.menu li a:hover {
 }
 
 .profile h1 {
-    font-size: 100px;
-    margin-bottom: 70px;
-    font-weight: bold;
-    margin-top: 20px;
+    font-family: 'Playfair Display', serif;
+    font-size: 50px;
+    color: #333;
+    margin-bottom: 20px;
 }
 
 .profile p {
