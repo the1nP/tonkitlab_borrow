@@ -47,6 +47,7 @@
                     <thead>
                         <tr>
                             <th>No.</th>
+                            <th>Equipment ID</th> <!-- เพิ่มคอลัมน์ Equipment ID -->
                             <th>Model</th>
                             <th>Status</th>
                             <th>Quantity Left</th>
@@ -58,6 +59,7 @@
                         {% for item in items %}
                         <tr class="parent-row">
                             <td>{{ loop.index }}</td>
+                            <td>{{ item.EquipmentID }}</td> <!-- แสดง Equipment ID -->
                             <td>{{ item.Name }}</td>
                             <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'red' }};">
                                 {{ item.StatusEquipment }}
