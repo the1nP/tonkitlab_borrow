@@ -152,17 +152,23 @@ ul.menu li a:hover {
     cursor: pointer;
 }
 
-
-
-
 /* Signup Section */
 main {
     display: flex;
-    justify-content: center;
+    flex-direction: column;  /* เปลี่ยนเป็น column เพื่อให้ h1 อยู่ด้านบน */
+    justify-content: flex-start;  /* เริ่มจากด้านบน */
     align-items: center;
-    height: calc(100vh - 60px);
+    min-height: calc(100vh - 60px);
     background-color: #f9f9f9;
     padding: 20px;
+}
+
+main h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 50px;  /* เพิ่มขนาดตัวอักษร */
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 .signup-container {
@@ -176,7 +182,8 @@ main {
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
     margin: 0 auto; /* จัดกล่องให้อยู่กลางหน้าเว็บ */
-    margin-top: 200px; /* เพิ่มระยะห่างด้านบนจาก menu bar */
+    margin-top: 20px; /* เพิ่มระยะห่างด้านบนจาก menu bar */
+    margin-bottom: 40px;  /* เพิ่มระยะห่างด้านล่าง */
 }
 
 /* สร้าง Grid Layout สำหรับช่องกรอกข้อมูล */
