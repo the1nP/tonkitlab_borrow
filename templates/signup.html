@@ -13,7 +13,7 @@
 <body>
     <header>
         <nav>
-            <!-- โลโ���้ -->
+            <!-- โลโก้ -->
             <div class="logo">
                 <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
             </div>
@@ -63,7 +63,16 @@
                 <input type="text" id="student-id" name="student-id" placeholder="Student ID" required>
             
                 <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" name="phone" placeholder="Phone Number" required>
+                <div class="phone-input-container">
+                    <input type="tel" 
+                           id="phone" 
+                           name="phone" 
+                           placeholder="+66812345678" 
+                           pattern="\+66[0-9]{9}"
+                           title="Please enter phone number in format: +66xxxxxxxxx"
+                           required>
+                    <small class="input-hint">Format: +66 followed by 9 digits.</small>
+                </div>
             
                 <label for="club-member">Are you a club member?</label>
                 <select id="club-member" name="club-member" required>
