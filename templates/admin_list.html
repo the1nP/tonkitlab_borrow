@@ -49,10 +49,10 @@
                             <th>User</th>
                             <th>Borrow Date</th>
                             <th>Item</th>
+                            <th>Due Date</th>
+                            <th>Return Date</th>
                             <th>Request Type</th>
                             <th>Status</th>
-                            <th>Return Date</th>
-        
                         </tr>
                     </thead>
                     <tbody>
@@ -62,13 +62,14 @@
                             <td>{{ record.user_id }}</td>
                             <td>{{ record.record_date }}</td>
                             <td>{{ record.equipment_name }}</td>
+                            <td>{{ record.due_date }}</td>
+                            <td>{{ record.get('ReturnDate', '-') }}</td>
                             <td>{{ record.RequestType }}</td>
                             <td style="color: {{ 'green' if record.StatusReq == 'Approved' 
                                                 else 'yellow' if record.StatusReq == 'Pending' 
                                                 else 'red' }};">
                                 {{ record.StatusReq }}
                             </td>
-                            <td>{{ record.due_date }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

@@ -52,11 +52,12 @@
                 <thead>
                     <tr>
                         <th>No.</th>
-                        <th>Date Recorded</th>
+                        <th>Request Date</th>
                         <th>Model</th>
+                        <th>Due Date</th>
+                        <th>Return Date</th>
                         <th>Request Type</th>
                         <th>Status</th>
-                        <th>Return Date</th>
                         <th>Action</th>
                     </tr>
                 </thead>
@@ -66,11 +67,24 @@
                         <td>{{ loop.index }}</td>
                         <td>{{ record.record_date }}</td>
                         <td>{{ record.equipment_name }}</td>
+                        <td>
+                            {% if record.RequestType == 'borrow' %}
+                                {% if record.StatusReq == 'Approved' %}
+                                    {{ record.due_date }}
+                                {% else %}
+                                    Will be set when approved
+                                {% endif %}
+                            {% else %}
+                                {{ record.due_date }}
+                            {% endif %}
+                        </td>
+                        <td>{{ record.get('ReturnDate', '-') }}</td>
                         <td>{{ record.RequestType }}</td>
                         <td style="color: {{ 'green' if record.StatusReq == 'Approved' 
-                    else 'orange' if record.StatusReq == 'Pending' 
-                    else 'red' }};">{{ record.StatusReq }}</td>
-                        <td>{{ record.due_date }}</td>
+                            else 'orange' if record.StatusReq == 'Pending' 
+                            else 'red' }};">
+                            {{ record.StatusReq }}
+                        </td>
                         <td>
                             <button onclick="returnItem('{{ record.user_id }}', 
                                                       '{{ record.equipment_id }}', 

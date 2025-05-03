@@ -390,7 +390,7 @@ def borrow_equipment(equipment_id):
                 'equipment_name': equipment_item['Name'],
                 'RequestType': 'borrow',
                 'record_date': now.strftime('%Y-%m-%d %H:%M:%S'),
-                'due_date': '-',
+                'due_date': '-',  # เริ่มต้นเป็น '-'
                 'StatusReq': 'Pending',
                 'isApprovedYet': 'false'
             }
@@ -577,14 +577,15 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
                 }
             )
 
-            # อัพเดต BorrowReturnRecords และเพิ่ม item_id
+            # อัพเดต BorrowReturnRecords และเพิ่ม due_date
             BorrowReturnRecordsTable.update_item(
                 Key={'record_id': record_id},
-                UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, item_id = :iid",
+                UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, item_id = :iid, due_date = :dd",
                 ExpressionAttributeValues={
                     ':s': 'Approved',
                     ':a': 'true',
-                    ':iid': available_item['ItemID']
+                    ':iid': available_item['ItemID'],
+                    ':dd': (now + timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S')  # กำหนด due_date ตอน approve
                 }
             )
 
