@@ -165,3 +165,43 @@ ul.menu li a:hover {
     transform: translateY(0);
     box-shadow: none;
 }
+
+/* เพิ่มสไตล์ใหม่ต่อจากสไตล์เดิม */
+.secondary-button {
+    background-color: #91766E;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    margin-top: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.secondary-button:hover {
+    background-color: #7a635c;
+}
+
+.secondary-button.cancel {
+    background-color: #d9534f;
+}
+
+.secondary-button.cancel:hover {
+    background-color: #c9302c;
+}
+
+#newCategoryContainer input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+#newCategoryContainer input:focus {
+    outline: none;
+    border-color: #91766E;
+}

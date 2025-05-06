@@ -51,10 +51,18 @@
                 <div class="form-group">
                     <label for="category">Category:</label>
                     <select id="category" name="category" required>
-                        <option value="Cameras">Cameras</option>
-                        <option value="Accessories">Accessories</option>
-                        <option value="Lenses">Lenses</option>
+                        <option value="">Select Category</option>
+                        <!-- Categories will be loaded dynamically -->
                     </select>
+                    <div id="newCategoryContainer" style="display: none; margin-top: 10px;">
+                        <input type="text" 
+                               id="newCategory" 
+                               name="newCategory" 
+                               placeholder="Enter new category name"
+                               pattern="[A-Za-z\s]+"
+                               title="Only letters and spaces allowed">
+                    </div>
+                    <button type="button" id="addNewCategoryBtn" class="secondary-button">Add New Category</button>
                 </div>
 
                 <div class="form-group">
@@ -77,33 +85,97 @@
 
     <!-- เพิ่ม JavaScript สำหรับจัดการ form submission -->
     <script>
-        document.querySelector('form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const response = await fetch("{{ url_for('admin_add_equipment') }}", {
-                method: 'POST',
-                body: formData
+        document.addEventListener('DOMContentLoaded', async () => {
+            const categorySelect = document.getElementById('category');
+            const newCategoryContainer = document.getElementById('newCategoryContainer');
+            const newCategoryInput = document.getElementById('newCategory');
+            const addNewCategoryBtn = document.getElementById('addNewCategoryBtn');
+            let isAddingNew = false;
+
+            // โหลดประเภทที่มีอยู่
+            try {
+                const response = await fetch("{{ url_for('get_categories') }}");
+                const data = await response.json();
+                if (data.success) {
+                    data.categories.forEach(category => {
+                        const option = new Option(category, category);
+                        categorySelect.add(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+
+            // จัดการการเพิ่มประเภทใหม่
+            addNewCategoryBtn.addEventListener('click', () => {
+                isAddingNew = !isAddingNew;
+                if (isAddingNew) {
+                    categorySelect.disabled = true;
+                    newCategoryContainer.style.display = 'block';
+                    addNewCategoryBtn.textContent = 'Cancel';
+                    addNewCategoryBtn.classList.add('cancel');
+                } else {
+                    categorySelect.disabled = false;
+                    newCategoryContainer.style.display = 'none';
+                    newCategoryInput.value = '';
+                    addNewCategoryBtn.textContent = 'Add New Category';
+                    addNewCategoryBtn.classList.remove('cancel');
+                }
             });
 
-            const result = await response.json();
-            
-            if (result.success) {
-                await Swal.fire({
-                    title: 'Success!',
-                    text: result.message,
-                    icon: 'success',
-                    confirmButtonColor: '#91766E'
-                });
-                window.location.href = result.redirect;
-            } else {
-                Swal.fire({
-                    title: 'Error!',
-                    text: result.message,
-                    icon: 'error',
-                    confirmButtonColor: '#91766E'
-                });
-            }
+            // แก้ไขการส่ง form (ลบ event listener เดิมออก)
+            const form = document.querySelector('form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // เช็คค่าที่กรอก
+                const name = document.getElementById('name').value.trim();
+                const category = isAddingNew ? 
+                    newCategoryInput.value.trim() : 
+                    categorySelect.value.trim();
+                const isMemberRequired = document.getElementById('isMemberRequired').value;
+                const quantity = document.getElementById('quantity').value;
+
+                // สร้าง FormData object
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('category', category);
+                formData.append('isMemberRequired', isMemberRequired);
+                formData.append('quantity', quantity);
+
+                try {
+                    const response = await fetch("{{ url_for('admin_add_equipment') }}", {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        await Swal.fire({
+                            title: 'Success!',
+                            text: result.message,
+                            icon: 'success',
+                            confirmButtonColor: '#91766E'
+                        });
+                        window.location.href = result.redirect;
+                    } else {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: result.message || 'Failed to add equipment',
+                            icon: 'error',
+                            confirmButtonColor: '#91766E'
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'An unexpected error occurred',
+                        icon: 'error',
+                        confirmButtonColor: '#91766E'
+                    });
+                }
+            });
         });
     </script>
 </body>

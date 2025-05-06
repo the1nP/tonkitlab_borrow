@@ -1091,5 +1091,32 @@ def get_item_list(equipment_id):
             'message': 'Failed to get item list'
         }), 500
 
+@app.route('/get_categories', methods=['GET'])
+def get_categories():
+    try:
+        # ดึงข้อมูลทั้งหมดจาก Equipment table
+        response = EquipmentTable.scan()
+        items = response['Items']
+        
+        # รวบรวมประเภทที่มีอยู่ทั้งหมด
+        categories = set()
+        for item in items:
+            if 'Category' in item:
+                categories.add(item['Category'])
+        
+        # แปลงเป็น list และเรียงลำดับ
+        categories_list = sorted(list(categories))
+        
+        return jsonify({
+            'success': True,
+            'categories': categories_list
+        })
+    except Exception as e:
+        print(f"Error getting categories: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Failed to get categories'
+        }), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
