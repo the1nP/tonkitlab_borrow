@@ -665,7 +665,7 @@ def approve_record(reqType, equipment_name, equipment_id, user_id, record_id):
                 }
             )
 
-            # อัพเดต BorrowReturnRecords
+            # อัพเดต BorrowReturnRecordsTable
             BorrowReturnRecordsTable.update_item(
                 Key={'record_id': record_id},
                 UpdateExpression="SET StatusReq = :s, isApprovedYet = :a, return_date = :rd",
@@ -1039,27 +1039,33 @@ def generate_record_id():
 
 def generate_equipment_id(category):
     try:
+        # ลบช่องว่างและแปลงเป็นตัวพิมพ์เล็กทั้งหมด
+        category_prefix = category.lower().replace(' ', '')
+        
+        # ดึงข้อมูลอุปกรณ์ที่มีอยู่ในประเภทเดียวกัน
         response = EquipmentTable.scan(
             FilterExpression=Attr('Category').eq(category)
         )
         existing_items = response['Items']
         max_id = 0
-        prefix = {
-            'Cameras': 'cameras',
-            'Lenses': 'lenses',  # แก้จาก 'lense' เป็น 'lenses'
-            'Accessories': 'acc'
-        }.get(category, 'item')
         
+        # หาเลขลำดับสูงสุดที่มีอยู่
         for item in existing_items:
-            if item['EquipmentID'].startswith(prefix):
-                current_id = int(item['EquipmentID'][len(prefix):])
-                max_id = max(max_id, current_id)
-        new_id = f"{prefix}{(max_id + 1):03d}"  # จะได้รูปแบบ lenses001, lenses002, ...
+            if item['EquipmentID'].startswith(category_prefix):
+                try:
+                    # แยกเอาเฉพาะตัวเลขท้าย
+                    current_id = int(item['EquipmentID'][len(category_prefix):])
+                    max_id = max(max_id, current_id)
+                except ValueError:
+                    continue
+        
+        # สร้าง ID ใหม่โดยใช้ชื่อประเภทจริง + เลขลำดับ 3 หลัก
+        new_id = f"{category_prefix}{(max_id + 1):03d}"
         return new_id
+        
     except Exception as e:
         print(f"Error generating equipment ID: {e}")
         return None
-
 
 @app.route('/get_item_list/<equipment_id>', methods=['GET'])
 def get_item_list(equipment_id):
