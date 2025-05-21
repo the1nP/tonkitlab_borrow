@@ -4,213 +4,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ToolTrack</title>
+    <title>My Borrow List - ToolTrack</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/list.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
-
 </head>
 
 <body>
     <header>
-        <nav>
-            <!-- โลโก้ -->
-            <div class="logo">
-                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
-            </div>
-            <!-- เมนู -->
-            <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
-                <li><a href="{{ url_for('list') }}">List</a></li>
-            </ul>
-            <!-- Username -->
-            <div class="user-section">
-                <!-- User -->
-                <div class="user">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <div class="logo navbar-brand">
+                    <a href="{{ url_for('home') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" />
+                    </a>
+                </div>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav menu mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('equipment') }}">Equipment</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="{{ url_for('list') }}">List</a></li>
+                    </ul>
+                    
                     {% if session.username %}
-                        <a href="{{ url_for('profile') }}">
-                            <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
-                        </a>
-                        <div class="username">
-                            <a href="{{ url_for('profile') }}">{{ session.username }}</a>
+                    <div class="user-section d-flex align-items-center">
+                        <div class="user me-3">
+                            <a href="{{ url_for('profile') }}" class="d-flex align-items-center text-decoration-none">
+                                <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" class="profile-icon" />
+                                <span class="username ms-2">{{ session.username }}</span>
+                            </a>
                         </div>
-                        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light logout-button">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </div>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-sm btn-light login-button">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
                     {% endif %}
                 </div>
             </div>
         </nav>
     </header>
     
-    <main>
-        <!-- Section: List -->
-        <section class="list-container">
-            <h1>List</h1>
-            <table class="equipment-list">
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Request Date</th>
-                        <th>Model</th>
-                        <th>Due Date</th>
-                        <th>Return Date</th>
-                        <th>Request Type</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in records %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ record.record_date }}</td>
-                        <td>{{ record.equipment_name }}</td>
-                        <td>
-                            {% if record.RequestType == 'borrow' %}
-                                {% if record.StatusReq == 'Approved' %}
-                                    {{ record.due_date }}
-                                {% else %}
-                                    Will be set when approved
-                                {% endif %}
-                            {% else %}
-                                {{ record.due_date }}
-                            {% endif %}
-                        </td>
-                        <td>{{ record.get('return_date', '-') }}</td>
-                        <td>{{ record.RequestType }}</td>
-                        <td style="color: {{ 'green' if record.StatusReq == 'Approved' 
-                            else 'orange' if record.StatusReq == 'Pending' 
-                            else 'red' }};">
-                            {{ record.StatusReq }}
-                        </td>
-                        <td>
-                            <button onclick="returnItem('{{ record.user_id }}', 
-                                                      '{{ record.equipment_id }}', 
-                                                      '{{ record.equipment_name }}', 
-                                                      '{{ record.due_date }}', 
-                                                      '{{ record.item_id }}')" 
-                                    class="return-button"
-                                    {% if not (record.RequestType == 'borrow' and record.StatusReq == 'Approved') %}
-                                        disabled
-                                    {% endif %}>
-                                Return
-                            </button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-    </main>
-
-    <!--Javascripts-->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const notificationIcon = document.getElementById("notification-icon");
-            const notificationDropdown = document.getElementById("notification-dropdown");
-        
-            notificationIcon.addEventListener("click", function (event) {
-                event.preventDefault();
-                // Toggle the visibility of the dropdown
-                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
-                    notificationDropdown.style.display = "block";
-                } else {
-                    notificationDropdown.style.display = "none";
-                }
-            });
-        
-            // Close the dropdown when clicking outside
-            document.addEventListener("click", function (event) {
-                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
-                    notificationDropdown.style.display = "none";
-                }
-            });
+    <main class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h1 class="display-4 fw-bold list-header">My Borrowing List</h1>
+                    <p class="lead text-muted">Track and manage your equipment borrowing history</p>
+                </div>
+            </div>
             
-        });
+            <div class="row">
+                <div class="col-12">
+                    <div class="list-card">
+                        <div class="table-responsive">
+                            <table class="table equipment-list">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Request Date</th>
+                                        <th scope="col">Equipment</th>
+                                        <th scope="col">Due Date</th>
+                                        <th scope="col">Return Date</th>
+                                        <th scope="col">Request Type</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in records %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ record.record_date }}</td>
+                                        <td class="equipment-name">{{ record.equipment_name }}</td>
+                                        <td>
+                                            {% if record.RequestType == 'borrow' %}
+                                                {% if record.StatusReq == 'Approved' %}
+                                                    <span class="date-info">{{ record.due_date }}</span>
+                                                {% else %}
+                                                    <span class="pending-date">Will be set when approved</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="date-info">{{ record.due_date }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ record.get('return_date', '-') }}</td>
+                                        <td>
+                                            <span class="badge {{ 'bg-primary' if record.RequestType == 'borrow' else 'bg-info' }}">
+                                                {{ record.RequestType }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge {{ 'status-approved' if record.StatusReq == 'Approved' 
+                                                else 'status-pending' if record.StatusReq == 'Pending' 
+                                                else 'status-rejected' }}">
+                                                {{ record.StatusReq }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button onclick="returnItem('{{ record.user_id }}', 
+                                                              '{{ record.equipment_id }}', 
+                                                              '{{ record.equipment_name }}', 
+                                                              '{{ record.due_date }}', 
+                                                              '{{ record.item_id }}')" 
+                                                    class="return-button"
+                                                    {% if not (record.RequestType == 'borrow' and record.StatusReq == 'Approved') %}
+                                                        disabled
+                                                    {% endif %}>
+                                                <i class="fas fa-undo-alt me-1"></i> Return
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if not records %}
+                        <div class="no-records text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="lead">You have no borrowing history yet.</p>
+                            <a href="{{ url_for('equipment') }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-search me-2"></i> Browse Equipment
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Return Item Script -->
+    <script>
+        function returnItem(userId, equipmentId, equipmentName, dueDate, itemId) {
+            Swal.fire({
+                title: 'Confirm Return',
+                text: `Do you want to return ${equipmentName}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, return it',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#91766E',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch('/return', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            equipment_id: equipmentId,
+                            equipment_name: equipmentName,
+                            due_date: dueDate,
+                            item_id: itemId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Return request has been submitted.',
+                                icon: 'success',
+                                confirmButtonColor: '#91766E'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: data.message || 'Failed to submit return request.',
+                                icon: 'error',
+                                confirmButtonColor: '#91766E'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'An error occurred while processing your request.',
+                            icon: 'error',
+                            confirmButtonColor: '#91766E'
+                        });
+                    });
+                }
+            });
+        }
     </script>
+    
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
         <script>
           if ('{{ category }}' == 'success') {
             Swal.fire({
-                  icon: 'success',
-                  title: '{{ message }}',
-                  showConfirmButton: true
-              })
+                icon: 'success',
+                title: 'Success!',
+                text: '{{ message }}',
+                confirmButtonColor: '#91766E'
+            });
           } else if ('{{ category }}' == 'error') {
               Swal.fire({
                   icon: 'error',
-                  title: '{{ message }}',
-                  showConfirmButton: true
-              })
+                  title: 'Error',
+                  text: '{{ message }}',
+                  confirmButtonColor: '#91766E'
+              });
           } else if ('{{ category }}' == 'info') {
               Swal.fire({
                   icon: 'info',
-                  title: '{{ message }}',
-                  showConfirmButton: true
-              })
+                  title: 'Information',
+                  text: '{{ message }}',
+                  confirmButtonColor: '#91766E'
+              });
           }
-          
-         
-          
-      </script>
+        </script>
         {% endfor %}
     {% endif %}
     {% endwith %}
 </body>
 </html>
-
-<!-- เพิ่ม JavaScript สำหรับยืนยันการคืนอุปกรณ์ -->
-<script>
-function returnItem(userId, equipmentId, equipmentName, dueDate, itemId) {
-    Swal.fire({
-        title: 'Confirm Return',
-        text: 'Do you want to return this equipment?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, return it',
-        cancelButtonText: 'Cancel',
-        confirmButtonColor: '#91766E',
-        cancelButtonColor: '#d33'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('/return', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    user_id: userId,
-                    equipment_id: equipmentId,
-                    equipment_name: equipmentName,
-                    due_date: dueDate,
-                    item_id: itemId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        title: 'Success!',
-                        text: 'Return request has been submitted.',
-                        icon: 'success',
-                        confirmButtonColor: '#91766E'
-                    }).then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: data.message || 'Failed to submit return request.',
-                        icon: 'error',
-                        confirmButtonColor: '#91766E'
-                    });
-                }
-            });
-        }
-    });
-}
-</script>

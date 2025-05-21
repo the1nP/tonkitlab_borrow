@@ -1,256 +1,298 @@
 /* General Styles */
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #ffffff;
-}
-
-header {
-    border-bottom: 1px solid #91766E;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f6f8fa;
+    min-height: 100vh;
 }
 
 /* Navigation Bar */
-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
+.navbar {
     background-color: #91766E;
-    height: 60px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 5px 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-nav .logo img {
-    height: 140px;
+.navbar .logo img {
+    height: 70px;
+    transition: transform 0.3s ease;
 }
 
-ul.menu {
-    list-style: none;
-    margin: 0 auto;
-    padding: 0;
-    display: flex;
-    align-items: center;
+.navbar .logo img:hover {
+    transform: scale(1.05);
 }
 
-ul.menu li {
-    margin: 0 15px;
+.navbar-nav .nav-link {
+    color: #F6ece3 !important;
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    margin: 0 8px;
+    padding: 5px 12px;
+    transition: all 0.3s ease;
 }
 
-ul.menu li a {
-    text-decoration: none;
-    color: #F6ece3;
-    font-size: 35px;
-    padding: 10px 15px;
-    transition: color 0.3s ease;
-    font-family: 'Playfair Display';
-    text-shadow: #000000;
+.navbar-nav .nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    border-radius: 5px;
 }
 
-ul.menu li a:hover {
-    color: #000000;
+.navbar-nav .nav-link.active {
+    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 5px;
 }
 
-/* Notification Icon */
-.notification {
-    position: relative; /* ใช้สำหรับวาง badge */
-    display: flex;
-    align-items: center; /* จัดให้อยู่กึ่งกลางในแนวตั้ง */
-    margin-right: 10px; /* ระยะห่างระหว่างกระดิ่งกับไอคอน User */
+.navbar-toggler {
+    border-color: #F6ece3;
+    padding: 4px 8px;
 }
 
-.notification img {
-    width: 35px; /* ขนาดของไอคอนกระดิ่ง */
-    height: 35px;
-    cursor: pointer; /* เปลี่ยนเป็น pointer เมื่อ hover */
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(246, 236, 227, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-.notification-badge {
-    position: absolute; /* กำหนดตำแหน่ง badge */
-    top: -5px; /* ตำแหน่งด้านบน */
-    right: -5px; /* ตำแหน่งด้านขวา */
-    background-color: red; /* สีพื้นหลังของ badge */
-    color: white; /* สีของตัวอักษร */
-    font-size: 12px; /* ขนาดตัวอักษร */
-    font-weight: bold;
-    padding: 3px 6px; /* เพิ่มความกว้างและสูงของ badge */
-    border-radius: 50%; /* ทำให้ badge เป็นวงกลม */
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2); /* เพิ่มเงา */
-}
-
-/* User Section */
-.user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user img {
-    width: 50px;
-    height: 50px;
-}
-
-.username a {
-    text-decoration: none;
-    font-size: 20px;
-    color: #F6ece3;
-    font-weight: bold;
-    font-family: 'Playfair Display';
-}
-
+/* User Section in Navbar */
 .user-section {
     display: flex;
-    align-items: center; /* จัดให้อยู่กึ่งกลางในแนวตั้ง */
-    gap: 20px; /* เพิ่มระยะห่างระหว่างไอคอนแจ้งเตือนและผู้ใช้ */
+    align-items: center;
 }
 
-
-/* Profile Icon Hover */
-.user img:hover {
-    filter: brightness(0); /* เปลี่ยนไอคอนให้เป็นสีดำ */
-    cursor: pointer;
+.user-section .user {
+    display: flex;
+    align-items: center;
 }
 
-.username a:hover {
-    color: #000000; /* เปลี่ยนเป็นสีดำ */
-    text-decoration: underline; /* เพิ่มเส้นใต้เมื่อชี้เม้าส์ */
+.profile-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #F6ece3;
 }
 
-/* Main Section */
+.user .username {
+    color: #F6ece3;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+}
+
+.logout-button {
+    padding: 6px 12px;
+    font-size: 14px;
+    border: 1px solid #F6ece3;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+.login-button {
+    padding: 6px 12px;
+    font-size: 14px;
+    background-color: #F6ece3;
+    color: #91766E;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #ffffff;
+    transform: translateY(-2px);
+}
+
+/* Main Content */
 main {
-    padding: 20px;
-    font-family: 'Arial', sans-serif;
+    min-height: 85vh;
+    background-color: #f6f8fa;
 }
 
-/* Section Styles */
-.list-container {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.list-container h1 {
+.list-header {
     font-family: 'Playfair Display', serif;
-    font-size: 50px;
-    color: #333;
-    margin-bottom: 20px;
+    color: #3a3a3a;
+    margin-bottom: 10px;
 }
 
-/* Table Styles */
+/* List Card */
+.list-card {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 5px solid #91766E;
+    padding: 30px;
+}
+
+/* Equipment List Table */
 .equipment-list {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.equipment-list th,
-.equipment-list td {
-    padding: 15px;
-    text-align: center;
-    border: 1px solid #ddd;
+.equipment-list thead {
+    background-color: #f8f9fa;
 }
 
 .equipment-list th {
-    background-color: #91766E;
-    color: #F6ECE3;
-    font-size: 18px;
-    font-weight: bold;
+    color: #91766E;
+    font-weight: 600;
+    border-top: none;
+    border-bottom: 2px solid #dee2e6;
+    padding: 15px 12px;
+    font-size: 15px;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .equipment-list td {
-    font-size: 16px;
+    padding: 15px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    font-size: 14px;
+}
+
+.equipment-list tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.3s ease;
+}
+
+.equipment-name {
+    font-weight: 500;
     color: #333;
 }
 
-.equipment-list .action-button {
-    background-color: #91766E;
-    color: #fff;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+/* Date Info */
+.date-info {
+    font-weight: 500;
 }
 
-.equipment-list .action-button:hover {
-    background-color: #75554E;
+.pending-date {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 13px;
 }
 
-.equipment-list .action-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .equipment-list table {
-        font-size: 14px;
-    }
-}
-
-.equipment-list tr:hover {
-    background-color: #f5f5f5;
-}
-
-
-.logout-button {
+/* Status Badges */
+.status-badge {
     display: inline-block;
-    padding: 10px 20px;
-    margin: 10px 0;
-    font-size: 16px;
-    font-weight: bold;
-    color: #fff;
-    background-color: #ff4b5c;
-    border: none;
-    border-radius: 5px;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
- }
- 
- .logout-button:hover {
-    background-color: #ff1f3a;
- }
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
 
-/* Button Styles */
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Return Button */
 .return-button {
     background-color: #91766E;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
+    border-radius: 30px;
+    padding: 6px 14px;
     font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .return-button:hover {
-    background-color: #7a635c;
+    background-color: #75554E;
     transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.return-button:active {
-    transform: translateY(0);
-    box-shadow: none;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .return-button:disabled {
-    background-color: #cccccc;
-    color: #666666;
+    background-color: #dee2e6;
+    color: #6c757d;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-    opacity: 0.7;
 }
 
-.return-button:disabled:hover {
-    background-color: #cccccc;
-    transform: none;
-    box-shadow: none;
+/* No Records Message */
+.no-records {
+    color: #6c757d;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991px) {
+    .navbar-collapse {
+        background-color: #91766E;
+        padding: 10px;
+        margin-top: 5px;
+        border-radius: 5px;
+    }
+    
+    .navbar .logo img {
+        height: 60px;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 8px 15px;
+    }
+
+    .list-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .equipment-list th, 
+    .equipment-list td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+
+    .status-badge {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
+    .return-button {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+
+    .list-header {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 576px) {
+    .equipment-list {
+        font-size: 12px;
+    }
+    
+    .list-card {
+        padding: 15px;
+    }
+
+    .return-button {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
 }
