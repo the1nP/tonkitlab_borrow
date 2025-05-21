@@ -63,28 +63,30 @@ def get_secret_hash(username, client_id, client_secret):
 def main_page():
     username = session.get('username')
     access_token = session.get('access_token')
-    if not username or not access_token:
-        flash('You need to log in first.', 'error')
-        return redirect(url_for('login'))
+    # if not username or not access_token:
+    #     flash('You need to log in first.', 'error')
+    #     return redirect(url_for('login'))
     try:
+        pass
         # ดึงข้อมูลผู้ใช้จาก Cognito
-        response = cognito.get_user(
-            AccessToken=access_token
-        )
-        user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
-        role = user_attributes.get('custom:role')
+        # response = cognito.get_user(
+        #     AccessToken=access_token
+        # )
+        # user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
+        # role = user_attributes.get('custom:role')
 
         # ตรวจสอบบทบาทของผู้ใช้
-        if role == 'admin':
-            return render_template('admin_home.html')
-        else:
-            return render_template('home.html')
+        # if role == 'admin':
+        #     return render_template('admin_home.html')
+        # else:
+        #     return render_template('home.html')
 
     except ClientError as e:
         error_message = e.response['Error']['Message']
         print(f"Error: {error_message}")
         flash(error_message, 'error')
         return redirect(url_for('login'))
+    return render_template('home.html')
 
 @app.route('/equipment', endpoint='equipment')
 def equipment_page():
