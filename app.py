@@ -740,6 +740,24 @@ def admin_lenses():
         print(f"Error: {e}")
         return "An error occurred while fetching data from DynamoDB."
 
+@app.route('/admin_equipdetail')
+def admin_equipdetail():
+    try:
+        category = request.args.get('category')
+        
+        if not category:
+            flash('Category parameter is required', 'error')
+            return redirect(url_for('equipment'))
+        
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq(category)
+        )
+        items = response['Items']
+        return render_template('admin_equipdetail.html', items=items, category=category)
+    except Exception as e:
+        print(f"Error: {e}")
+        return "An error occurred while fetching data from DynamoDB."
+
 @app.route('/admin_equipment')
 def admin_equipment():
     try:
