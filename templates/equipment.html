@@ -96,21 +96,14 @@
                         // สร้าง card สำหรับแต่ละ category
                         data.categories.forEach(category => {
                             // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category
-                            let detailsUrl = '';
-                            if (category === 'Cameras') {
-                                detailsUrl = "{{ url_for('details_camera') }}";
-                            } else if (category === 'Accessories') {
-                                detailsUrl = "{{ url_for('details_accessories') }}";
-                            } else if (category === 'Lenses') {
-                                detailsUrl = "{{ url_for('details_lenses') }}";
-                            } else {
-                                // สำหรับ category อื่นๆ ที่อาจเพิ่มในอนาคต
-                                detailsUrl = `/details/${category.toLowerCase()}`;
-                            }
+                                        // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category โดยใช้ equipment_detail route
+                            const detailsUrl = `/equipment_detail?category=${encodeURIComponent(category)}`;
                             
                             // สร้าง card element
                             const card = document.createElement('div');
                             card.className = 'equipment-card';
+                            
+                    
                             
                             // เพิ่มเนื้อหาใน card
                             card.innerHTML = `
