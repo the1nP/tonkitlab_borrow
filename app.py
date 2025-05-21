@@ -355,20 +355,20 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('login'))
 
-@app.route('/details_camera')
-def details_camera():
-    try:
-        response = EquipmentTable.scan(
-            FilterExpression=Attr('Category').eq('Cameras')
-        )
-        items = response['Items']
-        # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
-        for item in items:
-            item['isMemberRequired'] = item.get('isMemberRequired', 'no')  # ค่าเริ่มต้นเป็น 'no' ถ้าไม่มีฟิลด์นี้
-        return render_template('detailscamera.html', items=items)
-    except Exception as e:
-        print(f"Error: {e}")
-        return "An error occurred while fetching data from DynamoDB."
+# @app.route('/details_camera')
+# def details_camera():
+#     try:
+#         response = EquipmentTable.scan(
+#             FilterExpression=Attr('Category').eq('Cameras')
+#         )
+#         items = response['Items']
+#         # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
+#         for item in items:
+#             item['isMemberRequired'] = item.get('isMemberRequired', 'no')  # ค่าเริ่มต้นเป็น 'no' ถ้าไม่มีฟิลด์นี้
+#         return render_template('detailscamera.html', items=items)
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         return "An error occurred while fetching data from DynamoDB."
 
 @app.route('/equipment_detail')
 def equipment_detail():
@@ -449,35 +449,35 @@ def borrow_equipment(equipment_id):
         print(f"Error: {e}")
         return jsonify(success=False, message="An unexpected error occurred"), 500
 
-@app.route('/details_lenses')
-def details_lenses():
-    try:
-        response = EquipmentTable.scan(
-            FilterExpression=Attr('Category').eq('Lenses')
-        )
-        items = response['Items']
-        # เพิ่ม isMemberRequired ถ้าไม่มี
-        for item in items:
-            item['isMemberRequired'] = item.get('isMemberRequired', 'no')
-        return render_template('detailslenses.html', items=items)
-    except Exception as e:
-        print(f"Error: {e}")
-        return "An error occurred while fetching data from DynamoDB."
+# @app.route('/details_lenses')
+# def details_lenses():
+#     try:
+#         response = EquipmentTable.scan(
+#             FilterExpression=Attr('Category').eq('Lenses')
+#         )
+#         items = response['Items']
+#         # เพิ่ม isMemberRequired ถ้าไม่มี
+#         for item in items:
+#             item['isMemberRequired'] = item.get('isMemberRequired', 'no')
+#         return render_template('detailslenses.html', items=items)
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         return "An error occurred while fetching data from DynamoDB."
 
-@app.route('/details_accessories')
-def details_accessories():
-    try:
-        response = EquipmentTable.scan(
-            FilterExpression=Attr('Category').eq('Accessories')
-        )
-        items = response['Items']
-        # เพิ่ม isMemberRequired ถ้าไม่มี
-        for item in items:
-            item['isMemberRequired'] = item.get('isMemberRequired', 'no')
-        return render_template('detailsaccessories.html', items=items)
-    except Exception as e:
-        print(f"Error: {e}")
-        return "An error occurred while fetching data from DynamoDB."
+# @app.route('/details_accessories')
+# def details_accessories():
+#     try:
+#         response = EquipmentTable.scan(
+#             FilterExpression=Attr('Category').eq('Accessories')
+#         )
+#         items = response['Items']
+#         # เพิ่ม isMemberRequired ถ้าไม่มี
+#         for item in items:
+#             item['isMemberRequired'] = item.get('isMemberRequired', 'no')
+#         return render_template('detailsaccessories.html', items=items)
+#     except Exception as e:
+#         print(f"Error: {e}")
+#         return "An error occurred while fetching data from DynamoDB."
 
 @app.route('/list', endpoint='list')
 def list_records():
