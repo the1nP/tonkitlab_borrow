@@ -370,6 +370,32 @@ def details_camera():
         print(f"Error: {e}")
         return "An error occurred while fetching data from DynamoDB."
 
+@app.route('/equipment_detail')
+def equipment_detail():
+    try:
+        # รับค่า category จาก query parameter
+        category = request.args.get('category')
+        
+        if not category:
+            flash('Category parameter is required', 'error')
+            return redirect(url_for('equipment'))
+        
+        # ดึงข้อมูลจาก DynamoDB ตาม category ที่ได้รับ
+        response = EquipmentTable.scan(
+            FilterExpression=Attr('Category').eq(category)
+        )
+        items = response['Items']
+        
+        # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
+        for item in items:
+            item['isMemberRequired'] = item.get('isMemberRequired', 'no')  # ค่าเริ่มต้นเป็น 'no' ถ้าไม่มีฟิลด์นี้
+        
+        return render_template('equipment_detail.html', items=items, category=category)
+    except Exception as e:
+        print(f"Error: {e}")
+        flash('An error occurred while fetching data from DynamoDB.', 'error')
+        return redirect(url_for('equipment'))
+    
 @app.route('/borrow/<equipment_id>', methods=['POST'])
 def borrow_equipment(equipment_id):
     try:
