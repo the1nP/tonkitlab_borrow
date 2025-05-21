@@ -4,80 +4,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ToolTrack</title>
+    <title>Equipment - ToolTrack</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/equipment.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 
 <body>
     <header>
-        <nav>
-            <!-- โลโก้ -->
-            <div class="logo">
-                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
-            </div>
-            <!-- เมนู -->
-            <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
-                <li><a href="{{ url_for('list') }}">List</a></li>
-            </ul>
-            <!-- Username -->
-            <div class="user-section">
-                <!-- User -->
-                <div class="user">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <div class="logo navbar-brand">
+                    <a href="{{ url_for('home') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" />
+                    </a>
+                </div>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav menu mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="{{ url_for('equipment') }}">Equipment</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('list') }}">List</a></li>
+                    </ul>
+                    
                     {% if session.username %}
-                        <a href="{{ url_for('profile') }}">
-                            <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
-                        </a>
-                        <div class="username">
-                            <a href="{{ url_for('profile') }}">{{ session.username }}</a>
+                    <div class="user-section d-flex align-items-center">
+                        <div class="user me-3">
+                            <a href="{{ url_for('profile') }}" class="d-flex align-items-center text-decoration-none">
+                                <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" class="profile-icon" />
+                                <span class="username ms-2">{{ session.username }}</span>
+                            </a>
                         </div>
-                        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light logout-button">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </div>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-sm btn-light login-button">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
                     {% endif %}
                 </div>
             </div>
         </nav>
     </header>
     
-    <main>
-        <section class="equipment-list">
-            <h1>Equipment</h1>
-            <div class="equipment-grid" id="category-grid">
-                <!-- Equipment cards จะถูกเพิ่มโดย JavaScript -->
-                <div class="loading">Loading categories...</div>
+    <main class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h1 class="display-4 fw-bold equipment-header">Equipment Categories</h1>
+                    <p class="lead text-muted">Browse our available equipment by category</p>
+                </div>
             </div>
-        </section>
+            
+            <div class="row equipment-grid" id="category-grid">
+                <div class="col-12">
+                    <div class="text-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading categories...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
+    
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!--Javascripts-->
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // ส่วนของ notification จากโค้ดเดิม
-            const notificationIcon = document.getElementById("notification-icon");
-            const notificationDropdown = document.getElementById("notification-dropdown");
-        
-            if (notificationIcon) {
-                notificationIcon.addEventListener("click", function (event) {
-                    event.preventDefault();
-                    // Toggle the visibility of the dropdown
-                    if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
-                        notificationDropdown.style.display = "block";
-                    } else {
-                        notificationDropdown.style.display = "none";
-                    }
-                });
-            
-                // Close the dropdown when clicking outside
-                document.addEventListener("click", function (event) {
-                    if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
-                        notificationDropdown.style.display = "none";
-                    }
-                });
-            }
-            
             // เรียกใช้ API เพื่อดึงข้อมูล categories
             fetch('/get_categories')
                 .then(response => {
@@ -95,40 +104,100 @@
                         
                         // สร้าง card สำหรับแต่ละ category
                         data.categories.forEach(category => {
-                            // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category
-                                        // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category โดยใช้ equipment_detail route
+                            // เลือกรูปภาพตามประเภท
+                            let imageSrc = '';
+                            if (category === 'Cameras') {
+                                imageSrc = "{{ url_for('static', filename='images/camera.jpg') }}";
+                            } else if (category === 'Lenses') {
+                                imageSrc = "{{ url_for('static', filename='images/lens.jpg') }}";
+                            } else if (category === 'Accessories') {
+                                imageSrc = "{{ url_for('static', filename='images/accessory.jpg') }}";
+                            } else {
+                                imageSrc = "{{ url_for('static', filename='images/equipment.jpg') }}";
+                            }
+                            
+                            // สร้าง URL สำหรับดูรายละเอียด
                             const detailsUrl = `/equipment_detail?category=${encodeURIComponent(category)}`;
                             
-                            // สร้าง card element
-                            const card = document.createElement('div');
-                            card.className = 'equipment-card';
+                            // สร้าง column สำหรับ card
+                            const col = document.createElement('div');
+                            col.className = 'col-sm-6 col-lg-4 mb-4';
                             
-                    
-                            
-                            // เพิ่มเนื้อหาใน card
-                            card.innerHTML = `
-                                <h2>${category}</h2>
-                                <a href="${detailsUrl}" class="details-button">View Details</a>
+                            // สร้าง card และเนื้อหา
+                            col.innerHTML = `
+                                <div class="card equipment-card h-100">
+                                    <div class="card-category-icon">
+                                        <i class="fas ${category === 'Cameras' ? 'fa-camera' : category === 'Lenses' ? 'fa-circle' : 'fa-cogs'}"></i>
+                                    </div>
+                                    <div class="card-body">
+                                        <h2 class="card-title">${category}</h2>
+                                        <p class="card-text">Browse our selection of ${category.toLowerCase()} available for borrowing.</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-0 pb-4">
+                                        <a href="${detailsUrl}" class="btn details-button">
+                                            View Details <i class="fas fa-arrow-right ms-2"></i>
+                                        </a>
+                                    </div>
+                                </div>
                             `;
                             
                             // เพิ่ม card เข้าไปใน grid
-                            categoryGrid.appendChild(card);
+                            categoryGrid.appendChild(col);
                         });
                         
                         // ถ้าไม่มี category เลย
                         if (data.categories.length === 0) {
-                            categoryGrid.innerHTML = '<p>No equipment categories found.</p>';
+                            categoryGrid.innerHTML = `
+                                <div class="col-12 text-center p-5">
+                                    <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                                    <p class="lead">No equipment categories found.</p>
+                                </div>
+                            `;
                         }
                     } else {
                         console.error('Failed to load categories');
-                        document.getElementById('category-grid').innerHTML = '<p>Failed to load categories. Please try again later.</p>';
+                        document.getElementById('category-grid').innerHTML = `
+                            <div class="col-12 text-center p-5">
+                                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                                <p class="lead">Failed to load categories. Please try again later.</p>
+                            </div>
+                        `;
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('category-grid').innerHTML = '<p>Error loading categories. Please try again later.</p>';
+                    document.getElementById('category-grid').innerHTML = `
+                        <div class="col-12 text-center p-5">
+                            <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+                            <p class="lead">Error loading categories. Please try again later.</p>
+                        </div>
+                    `;
                 });
         });
     </script>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <script>
+          if ('{{ category }}' == 'success') {
+            Swal.fire({
+              icon: 'success',
+              title: 'Success!',
+              text: '{{ message }}',
+              confirmButtonColor: '#91766E'
+            });
+          } else if ('{{ category }}' == 'error') {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: '{{ message }}',
+                  confirmButtonColor: '#91766E'
+              });
+          }
+        </script>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
 </body>
 </html>
