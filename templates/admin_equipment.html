@@ -38,22 +38,10 @@
     <main>
         <section class="equipment-list">
             <h1>Equipment</h1>
-            <div class="equipment-grid">
+            <div class="equipment-grid" id="equipment-grid">
                 <!-- ตัวอย่างอุปกรณ์ -->
-                <div class="equipment-card">
-                    <img src="{{ url_for('static', filename='images/EOS200D.png') }}" alt="EOS200D" />
-                    <h2>Cameras</h2>
-                    <a href="{{ url_for('admin_camera') }}" class="details-button">View Details</a>
-                </div>
-                <div class="equipment-card">
-                    <img src="{{ url_for('static', filename='images/Speedlite.png') }}" alt="Speedlite" />
-                    <h2>Accessories</h2>
-                    <a href="{{ url_for('admin_accessories') }}" class="details-button">View Details</a>
-                </div>
-                <div class="equipment-card">
-                    <img src="{{ url_for('static', filename='images/RF24mm.png') }}" alt="Lens" />
-                    <h2>Lenses Cameras</h2>
-                    <a href="{{ url_for('admin_lenses') }}" class="details-button">View Details</a>
+                <!-- <div class="equipment-card"> -->
+
                 </div>
             </div>
             <a href="{{ url_for('admin_add_equipment') }}" class="add-equipment-button">Add New Equipment</a>
@@ -62,3 +50,57 @@
 </body>
 
 </html>
+<script>
+                // เรียกใช้ API เพื่อดึงข้อมูล categories
+                fetch('/get_categories')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const categoryGrid = document.getElementById('equipment-grid');
+                        
+                        // ลบข้อความ Loading
+                        categoryGrid.innerHTML = '';
+                        
+                        // สร้าง card สำหรับแต่ละ category
+                        data.categories.forEach(category => {
+                            // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category
+                                        // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category โดยใช้ equipment_detail route
+                            const detailsUrl = `/admin_equipdetail?category=${encodeURIComponent(category)}`;
+                            
+                            // สร้าง card element
+                            const card = document.createElement('div');
+                            card.className = 'equipment-card';
+                            
+                    
+                            
+                            // เพิ่มเนื้อหาใน card
+                            card.innerHTML = `
+                                <h2>${category}</h2>
+                                <a href="${detailsUrl}" class="details-button">View Details</a>
+                            `;
+                            
+                            // เพิ่ม card เข้าไปใน grid
+                            categoryGrid.appendChild(card);
+                        });
+                        
+                        // ถ้าไม่มี category เลย
+                        if (data.categories.length === 0) {
+                            categoryGrid.innerHTML = '<p>No equipment categories found.</p>';
+                        }
+                    } else {
+                        console.error('Failed to load categories');
+                        document.getElementById('equipment-grid').innerHTML = '<p>Failed to load categories. Please try again later.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('equipment-grid').innerHTML = '<p>Error loading categories. Please try again later.</p>';
+                });
+        
+
+</script>
