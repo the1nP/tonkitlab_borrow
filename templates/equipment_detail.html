@@ -4,181 +4,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ToolTrack</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/detailscamera.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>{{ category }} - ToolTrack</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/equipment_detail.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 
 <body>
     <header>
-        <nav>
-            <!-- โลโก้ -->
-            <div class="logo">
-                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
-            </div>
-            <!-- เมนู -->
-            <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('equipment') }}">Equipment</a></li>
-                <li><a href="{{ url_for('list') }}">List</a></li>
-            </ul>
-            <!-- Username -->
-            <div class="user-section">
-                <!--Notification
-                <div class="notification">
-                    <a href="#" id="notification-icon"><img src="{{ url_for('static', filename='images/bell.png') }}" alt="Notification Bell" /></a>
-                    <div class="notification-badge">3</div> <!-- ตัวเลขแจ้งเตือน -->
-                        <!-- Dropdown Notifications 
-                        <div class="notification-dropdown" id="notification-dropdown">
-                        <h4>Notifications</h4>
-                        <ul>
-                        <li>Your equipment loan is due tomorrow.</li>
-                        <li>Equipment XYZ is overdue!</li>
-                        <li>Reminder: Return equipment ABC today.</li>
-                        </ul>
-                        </div>
-                </div> -->
-                <!-- User -->
-                <div class="user">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <div class="logo navbar-brand">
+                    <a href="{{ url_for('home') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" />
+                    </a>
+                </div>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav menu mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="{{ url_for('equipment') }}">Equipment</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('list') }}">List</a></li>
+                    </ul>
+                    
                     {% if session.username %}
-                        <a href="{{ url_for('profile') }}">
-                            <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
-                        </a>
-                        <div class="username">
-                            <a href="{{ url_for('profile') }}">{{ session.username }}</a>
+                    <div class="user-section d-flex align-items-center">
+                        <div class="user me-3">
+                            <a href="{{ url_for('profile') }}" class="d-flex align-items-center text-decoration-none">
+                                <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" class="profile-icon" />
+                                <span class="username ms-2">{{ session.username }}</span>
+                            </a>
                         </div>
-                        <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light logout-button">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </div>
                     {% else %}
-                        <a href="{{ url_for('login') }}" class="login-button">Login</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-sm btn-light login-button">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
                     {% endif %}
                 </div>
             </div>
         </nav>
     </header>
     
-    <main>
-        <section class="equipment-details">
-            <h1>{{ category }}</h1>    
-                        <!-- ข้อมูลกล้องในรูปแบบตาราง -->
-            <div class="equipment-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>Model</th>
-                            <th>Status</th>
-                            <th>Quantity</th>
-                            <th>Member Only</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in items %}
-                        <tr data-equipment-id="{{ item.EquipmentID }}">
-                            <td>{{ loop.index }}</td>
-                            <td>{{ item.Name }}</td>
-                            <td style="color: {{ 'green' if item.StatusEquipment == 'Available' else 'red' }};">
-                                {{ item.StatusEquipment }}
-                            </td>
-                            <td>{{ item.Quantity }}</td>
-                            <td>
-                                {% if item.isMemberRequired == 'yes' %}
-                                    <span class="icon-check">&#10004;</span>
-                                {% else %}
-                                    <span class="icon-cross">&#10008;</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="action-button" 
-                                        {% if item.StatusEquipment != 'Available' or item.Quantity <= 0 %}disabled{% endif %}
-                                        onclick="borrowEquipment('{{ item.EquipmentID }}')">
-                                    Borrow
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <main class="py-5">
+        <div class="container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('equipment') }}">Equipment</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ category }}</li>
+                        </ol>
+                    </nav>
+                </div>
             </div>
-        </section>
+
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h1 class="display-4 fw-bold equipment-header">{{ category }}</h1>
+                    <p class="lead text-muted">Browse available {{ category.lower() }} for borrowing</p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="equipment-detail-card">
+                        <div class="table-responsive">
+                            <table class="table equipment-table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col">Model</th>
+                                        <th scope="col">Status</th>
+                                        <th scope="col">Quantity</th>
+                                        <th scope="col">Member Only</th>
+                                        <th scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in items %}
+                                    <tr data-equipment-id="{{ item.EquipmentID }}">
+                                        <td>{{ loop.index }}</td>
+                                        <td class="model-name">{{ item.Name }}</td>
+                                        <td>
+                                            <span class="status-badge {{ 'status-available' if item.StatusEquipment == 'Available' else 'status-unavailable' }}">
+                                                {{ item.StatusEquipment }}
+                                            </span>
+                                        </td>
+                                        <td>{{ item.Quantity }}</td>
+                                        <td>
+                                            {% if item.isMemberRequired == 'yes' %}
+                                                <span class="icon-check"><i class="fas fa-check-circle"></i></span>
+                                            {% else %}
+                                                <span class="icon-cross"><i class="fas fa-times-circle"></i></span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <button class="action-button" 
+                                                    {% if item.StatusEquipment != 'Available' or item.Quantity <= 0 %}disabled{% endif %}
+                                                    onclick="borrowEquipment('{{ item.EquipmentID }}', '{{ item.Name }}')">
+                                                <i class="fas fa-shopping-cart me-1"></i> Borrow
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% if not items %}
+                        <div class="no-items text-center py-5">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <p class="lead">No {{ category.lower() }} found in inventory.</p>
+                            <a href="{{ url_for('equipment') }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-arrow-left me-2"></i> Back to Categories
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
     
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!--Javascripts-->
-    <!-- <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const notificationIcon = document.getElementById("notification-icon");
-            const notificationDropdown = document.getElementById("notification-dropdown");
-        
-            notificationIcon.addEventListener("click", function (event) {
-                event.preventDefault();
-                // Toggle the visibility of the dropdown
-                if (notificationDropdown.style.display === "none" || notificationDropdown.style.display === "") {
-                    notificationDropdown.style.display = "block";
-                } else {
-                    notificationDropdown.style.display = "none";
-                }
-            });
-        
-            // Close the dropdown when clicking outside
-            document.addEventListener("click", function (event) {
-                if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
-                    notificationDropdown.style.display = "none";
-                }
-            });
-        });
-    </script> -->
-<script>
-    function borrowEquipment(equipmentId) {
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "Do you want to borrow this equipment? You will have 7 days to use it after admin approval.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, borrow it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/borrow/${equipmentId}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ status: "Pending" })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // row.querySelector("td:nth-child(3)").innerText = "Pending";
-                        // row.querySelector("td:nth-child(3)").style.color = "yellow";
-                        Swal.fire(
-                            'Borrowed!',
-                            'The equipment has been borrowed.',
-                            'success'
-                        ).then(() => {
-                            window.location.reload();
+    <script>
+        function borrowEquipment(equipmentId, equipmentName) {
+            Swal.fire({
+                title: 'Borrow Equipment',
+                text: `Do you want to borrow ${equipmentName}? You will have 7 days to use it after admin approval.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#91766E',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, borrow it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/borrow/${equipmentId}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ status: "Pending" })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: 'Your borrow request has been submitted successfully.',
+                                icon: 'success',
+                                confirmButtonColor: '#91766E'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Unable to Borrow',
+                                text: data.message || 'Failed to borrow the equipment. You may need to be a member for this item.',
+                                icon: 'warning',
+                                confirmButtonColor: '#91766E'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'An error occurred while processing your request.',
+                            icon: 'error',
+                            confirmButtonColor: '#91766E'
                         });
-                    } else {
-                        Swal.fire(
-                            'Failed!',
-                            'Failed to borrow the equipment because you are not a member.',
-                            'error'
-                        );
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    Swal.fire(
-                        'Error!',
-                        'An error occurred while borrowing the equipment.',
-                        'error'
-                    );
-                });
-            }
-        });
-    }
-</script>
+                    });
+                }
+            });
+        }
+    </script>
 </body>
 </html>
