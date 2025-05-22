@@ -4,86 +4,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add Equipment</title>
+    <title>Add Equipment - ToolTrack</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_add_equipment.css') }}">
-    <!-- เพิ่ม SweetAlert2 CDN -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared_navbar.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
-    <!-- เมนู -->
     <header>
-        <nav>
-            <div class="logo">
-                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
-            </div>
-            <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li>
-                <li><a href="{{ url_for('admin_req') }}">Request</a></li>
-                <li><a href="{{ url_for('admin_list') }}">List</a></li>
-            </ul>
-            <div class="user-section">
-                <div class="user">
-                    <a href="{{ url_for('profile') }}">
-                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <div class="logo navbar-brand">
+                    <a href="{{ url_for('admin_home') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" />
                     </a>
-                    <div class="username">
-                        <a href="{{ url_for('profile') }}">{{ session.get('username', 'Admin') }}</a>
+                </div>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav menu mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_home') }}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin_equipment') }}">Equipment</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_req') }}">Request</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_list') }}">List</a></li>
+                    </ul>
+                    
+                    <div class="user-section d-flex align-items-center">
+                        <div class="user me-3">
+                            <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center text-decoration-none">
+                                <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" class="profile-icon" />
+                                <span class="username ms-2">{{ session.get('username', 'Admin') }}</span>
+                            </a>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light logout-button">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
                     </div>
-                    <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
                 </div>
             </div>
         </nav>
     </header>
 
-    <!-- ฟอร์มเพิ่มอุปกรณ์ -->
-    <main>
-        <section class="add-equipment">
-            <h1>Add Equipment</h1>
-            <p class="form-description">Please fill out the form below to add a new equipment to the system.</p>
-            <form method="POST" action="{{ url_for('admin_add_equipment') }}">
-                <div class="form-group">
-                    <label for="name">Equipment Name:</label>
-                    <input type="text" id="name" name="name" placeholder="Enter equipment name" required>
+    <main class="py-5">
+        <div class="container">
+            <!-- Move title outside card -->
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h1 class="display-4 fw-bold equipment-header">Add Equipment</h1>
+                    <p class="lead text-muted">Please fill out the form below to add new equipment</p>
                 </div>
+            </div>
 
-                <div class="form-group">
-                    <label for="category">Category:</label>
-                    <select id="category" name="category" required>
-                        <option value="">Select Category</option>
-                        <!-- Categories will be loaded dynamically -->
-                    </select>
-                    <div id="newCategoryContainer" style="display: none; margin-top: 10px;">
-                        <input type="text" 
-                               id="newCategory" 
-                               name="newCategory" 
-                               placeholder="Enter new category name"
-                               pattern="[A-Za-z\s]+"
-                               title="Only letters and spaces allowed">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card add-equipment-card">
+                        <div class="card-body p-4 p-md-5">
+                            <form method="POST" action="{{ url_for('admin_add_equipment') }}">
+                                <div class="mb-4">
+                                    <label for="name" class="form-label">
+                                        <i class="fas fa-camera me-2"></i>Equipment Name
+                                    </label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="category" class="form-label">
+                                        <i class="fas fa-tags me-2"></i>Category
+                                    </label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Select Category</option>
+                                    </select>
+                                    
+                                    <div id="newCategoryContainer" class="mt-3 d-none">
+                                        <input type="text" class="form-control" id="newCategory" name="newCategory"
+                                               placeholder="Enter new category name" pattern="[A-Za-z\s]+">
+                                    </div>
+                                    
+                                    <button type="button" id="addNewCategoryBtn" 
+                                            class="btn btn-outline-secondary mt-2">
+                                        <i class="fas fa-plus me-2"></i>Add New Category
+                                    </button>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="isMemberRequired" class="form-label">
+                                        <i class="fas fa-user-check me-2"></i>Member Only
+                                    </label>
+                                    <select class="form-select" id="isMemberRequired" name="isMemberRequired" required>
+                                        <option value="no">No - All users can borrow</option>
+                                        <option value="yes">Yes - Only members can borrow</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="quantity" class="form-label">
+                                        <i class="fas fa-hashtag me-2"></i>Quantity
+                                    </label>
+                                    <input type="number" class="form-control" id="quantity" 
+                                           name="quantity" min="1" required>
+                                </div>
+
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg submit-button">
+                                        <i class="fas fa-plus-circle me-2"></i>Add Equipment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    <button type="button" id="addNewCategoryBtn" class="secondary-button">Add New Category</button>
                 </div>
-
-                <div class="form-group">
-                    <label for="isMemberRequired">Member Only:</label>
-                    <select id="isMemberRequired" name="isMemberRequired" required>
-                        <option value="no">No - All users can borrow</option>
-                        <option value="yes">Yes - Only members can borrow</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="quantity">Quantity:</label>
-                    <input type="number" id="quantity" name="quantity" min="1" placeholder="Enter quantity" required>
-                </div>
-
-                <button type="submit" class="submit-button">Add Equipment</button>
-            </form>
-        </section>
+            </div>
+        </div>
     </main>
 
-    <!-- เพิ่ม JavaScript สำหรับจัดการ form submission -->
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Keep existing JavaScript code -->
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             const categorySelect = document.getElementById('category');
@@ -111,14 +158,14 @@
                 isAddingNew = !isAddingNew;
                 if (isAddingNew) {
                     categorySelect.disabled = true;
-                    newCategoryContainer.style.display = 'block';
-                    addNewCategoryBtn.textContent = 'Cancel';
+                    newCategoryContainer.classList.remove('d-none');
+                    addNewCategoryBtn.innerHTML = '<i class="fas fa-times me-2"></i>Cancel';
                     addNewCategoryBtn.classList.add('cancel');
                 } else {
                     categorySelect.disabled = false;
-                    newCategoryContainer.style.display = 'none';
+                    newCategoryContainer.classList.add('d-none');
                     newCategoryInput.value = '';
-                    addNewCategoryBtn.textContent = 'Add New Category';
+                    addNewCategoryBtn.innerHTML = '<i class="fas fa-plus me-2"></i>Add New Category';
                     addNewCategoryBtn.classList.remove('cancel');
                 }
             });
@@ -179,5 +226,4 @@
         });
     </script>
 </body>
-
 </html>

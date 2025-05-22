@@ -1,207 +1,205 @@
-/* General Styles */
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background-color: #ffffff;
-}
-
-header {
-    border-bottom: 1px solid #91766E;
-}
-
-/* Navigation Bar */
-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background-color: #91766E;
-    height: 60px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-nav .logo img {
-    height: 140px;
-}
-
-ul.menu {
-    list-style: none;
-    margin: 0 auto;
-    padding: 0;
-    display: flex;
-    align-items: center;
-}
-
-ul.menu li {
-    margin: 0 15px;
-}
-
-ul.menu li a {
-    text-decoration: none;
-    color: #F6ece3;
-    font-size: 35px;
-    padding: 10px 15px;
-    transition: color 0.3s ease;
-    font-family: 'Playfair Display';
-    text-shadow: #000000;
-}
-
-ul.menu li a:hover {
-    color: #000000;
-}
-
-/* User Section */
-.user-section {
-    display: flex;
-    align-items: center;
-}
-
-.user {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.user img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-
-.username {
-    margin-right: 15px;
-}
-
-.username a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.logout-button {
-    background-color: #d9534f;
-    color: white;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-}
-
-.logout-button:hover {
-    background-color: #c9302c;
-}
-
-/* Add Equipment Section */
-.add-equipment {
-    max-width: 800px;
-    margin: 40px auto;
-    padding: 30px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.add-equipment h1 {
+/* Typography */
+.equipment-header {
     font-family: 'Playfair Display', serif;
-    font-size: 50px;
-    color: #333;
-    margin-bottom: 30px;
+    color: #2c3e50;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
 }
 
-.add-equipment .form-description {
-    font-size: 18px;
-    color: #666;
-    margin-bottom: 30px;
+.lead {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin-bottom: 2rem;
 }
 
-.form-group {
-    margin-bottom: 25px;
-    text-align: left;
-}
-
-.form-group label {
-    display: block;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 8px;
-}
-
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: #91766E;
-}
-
-.submit-button {
-    background-color: #91766E;
-    color: white;
+/* Card Styles */
+.add-equipment-card {
     border: none;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 4px;
-    cursor: pointer;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #91766E;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-top: 1rem;
+}
+
+.add-equipment-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Styles */
+.form-label {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e9ecef;
+    padding: 0.75rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #91766E;
+    box-shadow: 0 0 0 0.2rem rgba(145, 118, 110, 0.25);
+}
+
+/* Button Styles */
+.submit-button {
+    background-color: #91766E !important;
+    border: none;
+    padding: 12px 30px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
     transition: all 0.3s ease;
 }
 
 .submit-button:hover {
-    background-color: #7a635c;
+    background-color: #75554E !important;
     transform: translateY(-2px);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 5px 15px rgba(145, 118, 110, 0.4);
 }
 
 .submit-button:active {
     transform: translateY(0);
-    box-shadow: none;
 }
 
-/* เพิ่มสไตล์ใหม่ต่อจากสไตล์เดิม */
-.secondary-button {
-    background-color: #91766E;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    margin-top: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
+#addNewCategoryBtn {
+    color: #91766E;
+    border-color: #91766E;
     transition: all 0.3s ease;
 }
 
-.secondary-button:hover {
-    background-color: #7a635c;
+#addNewCategoryBtn:hover {
+    background-color: #91766E;
+    color: white;
+    transform: translateY(-2px);
 }
 
-.secondary-button.cancel {
-    background-color: #d9534f;
+#addNewCategoryBtn.cancel {
+    color: #dc3545;
+    border-color: #dc3545;
 }
 
-.secondary-button.cancel:hover {
-    background-color: #c9302c;
+#addNewCategoryBtn.cancel:hover {
+    background-color: #dc3545;
+    color: white;
 }
 
-#newCategoryContainer input {
-    width: 100%;
+/* Icons */
+.form-label i {
+    color: #91766E;
+    width: 20px;
+    text-align: center;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#newCategoryContainer.show {
+    display: block !important;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Select Dropdown Styles */
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2391766E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px;
+    cursor: pointer;
+}
+
+/* Select Options Styling */
+.form-select option {
+    font-family: 'Poppins', sans-serif;
     padding: 12px;
-    margin-top: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-    transition: border-color 0.3s ease;
+    margin: 4px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
 
-#newCategoryContainer input:focus {
-    outline: none;
+.form-select option:checked {
+    background: linear-gradient(to right, #91766E, #75554E);
+    color: white;
+}
+
+.form-select option:hover {
+    background-color: rgba(145, 118, 110, 0.1);
+}
+
+/* Custom Select Container */
+.mb-4 select {
+    min-height: 50px;
+    font-size: 1rem;
+    background-color: white;
+}
+
+/* Dropdown Open Animation */
+.form-select:focus {
     border-color: #91766E;
+    box-shadow: 0 0 0 0.25rem rgba(145, 118, 110, 0.25);
+    animation: selectOpen 0.3s ease;
+}
+
+@keyframes selectOpen {
+    0% {
+        transform: translateY(-2px);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Hover State */
+.form-select:not(:disabled):hover {
+    border-color: #91766E;
+    background-color: rgba(145, 118, 110, 0.02);
+}
+
+/* Disabled State */
+.form-select:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* Selected Option */
+.form-select option:checked {
+    font-weight: 500;
+    background-color: #91766E !important;
+    color: white;
+}
+
+/* Option Groups if needed */
+.form-select optgroup {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    color: #2c3e50;
+    padding: 8px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .equipment-header {
+        font-size: 2.5rem;
+    }
+    
+    .lead {
+        font-size: 1.1rem;
+    }
+    
+    .card-body {
+        padding: 2rem;
+    }
 }
