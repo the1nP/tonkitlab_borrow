@@ -140,7 +140,7 @@ def profile_page():
         # ตรวจสอบว่าเป็นแอดมินหรือไม่
         role = user_attributes.get('custom:role')
         if role == 'admin':
-            return render_template('admin_profile.html', user_info=user_info)
+            return render_template('admin_req.html', user_info=user_info)
         else:
             return render_template('profile.html', user_info=user_info)
 
@@ -1169,6 +1169,72 @@ def get_categories():
             'success': False,
             'message': 'Failed to get categories'
         }), 500
+
+@app.route('/admin_home')
+def admin_home():
+    try:
+        # ตรวจสอบการล็อกอิน
+        if 'username' not in session:
+            flash('Please log in first', 'info')
+            return redirect(url_for('login'))
+            
+        # ตรวจสอบสิทธิ์ admin
+        access_token = session.get('access_token')
+        user_response = cognito.get_user(
+            AccessToken=access_token
+        )
+        user_attributes = {attr['Name']: attr['Value'] 
+                         for attr in user_response['UserAttributes']}
+        
+        if user_attributes.get('custom:role') != 'admin':
+            flash('You do not have permission to access this page', 'error')
+            return redirect(url_for('home'))
+            
+        return render_template('admin_home.html')
+        
+    except Exception as e:
+        print(f"Error in admin_home: {str(e)}")
+        flash('An error occurred', 'error')
+        return redirect(url_for('login'))
+
+@app.route('/admin_profile')
+def admin_profile():
+    try:
+        # ตรวจสอบการล็อกอิน
+        if 'username' not in session or 'access_token' not in session:
+            flash('Please log in first', 'info')
+            return redirect(url_for('login'))
+            
+        # ดึงข้อมูล user จาก Cognito
+        access_token = session['access_token']
+        user_response = cognito.get_user(
+            AccessToken=access_token
+        )
+        
+        # แปลง attributes เป็น dict
+        user_attributes = {attr['Name']: attr['Value'] 
+                         for attr in user_response['UserAttributes']}
+        
+        # ตรวจสอบสิทธิ์ admin
+        if user_attributes.get('custom:role') != 'admin':
+            flash('You do not have permission to access this page', 'error')
+            return redirect(url_for('home'))
+            
+        # สร้าง user_info dictionary
+        user_info = {
+            'username': session['username'],
+            'email': user_attributes.get('email'),
+            'fullname': user_attributes.get('name'),
+            'phone': user_attributes.get('phone_number'),
+            'role': user_attributes.get('custom:role')
+        }
+            
+        return render_template('admin_profile.html', user_info=user_info)
+        
+    except Exception as e:
+        print(f"Error in admin_profile: {str(e)}")
+        flash('An error occurred while loading profile', 'error')
+        return redirect(url_for('admin_req'))
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=2004, debug=True)

@@ -5,54 +5,87 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Equipment</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_equipment.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared_navbar.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body>
-    <!-- เมนู -->
     <header>
-        <nav>
-            <div class="logo">
-                <a href="{{ url_for('home') }}"><img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" /></a>
-            </div>
-            <ul class="menu">
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('admin_equipment') }}">Equipment</a></li>
-                <li><a href="{{ url_for('admin_req') }}">Request</a></li>
-                <li><a href="{{ url_for('admin_list') }}">List</a></li>
-            </ul>
-            <div class="user-section">
-                <div class="user">
-                    <a href="{{ url_for('profile') }}">
-                        <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" />
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <div class="logo navbar-brand">
+                    <a href="{{ url_for('admin_home') }}">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" />
                     </a>
-                    <div class="username">
-                        <a href="{{ url_for('profile') }}">{{ session.get('username', 'Admin') }}</a>
+                </div>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav menu mx-auto">
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_home') }}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin_equipment') }}">Equipment</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_req') }}">Request</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_list') }}">List</a></li>
+                    </ul>
+                    
+                    <div class="user-section d-flex align-items-center">
+                        <div class="user me-3">
+                            <a href="{{ url_for('admin_profile') }}" class="d-flex align-items-center text-decoration-none">
+                                <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" class="profile-icon" />
+                                <span class="username ms-2">{{ session.username }}</span>
+                            </a>
+                        </div>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light logout-button">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
                     </div>
-                    <a href="{{ url_for('logout') }}" class="logout-button">Logout</a>
                 </div>
             </div>
         </nav>
     </header>
 
-    <main>
-        <section class="equipment-list">
-            <h1>Equipment</h1>
-            <div class="equipment-grid" id="equipment-grid">
-                <!-- ตัวอย่างอุปกรณ์ -->
-                <!-- <div class="equipment-card"> -->
-
+    <main class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h1 class="display-4 fw-bold equipment-header">Equipment Management</h1>
+                    <p class="lead text-muted">Manage all equipment categories</p>
+                    <a href="{{ url_for('admin_add_equipment') }}" class="btn btn-lg add-equipment-button mt-3">
+                        <i class="fas fa-plus me-2"></i>Add New Equipment
+                    </a>
                 </div>
             </div>
-            <a href="{{ url_for('admin_add_equipment') }}" class="add-equipment-button">Add New Equipment</a>
-        </section>
+            
+            <div class="row equipment-grid" id="category-grid">
+                <div class="col-12">
+                    <div class="text-center p-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading categories...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
-</body>
 
-</html>
-<script>
-                // เรียกใช้ API เพื่อดึงข้อมูล categories
-                fetch('/get_categories')
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/get_categories')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -61,46 +94,62 @@
                 })
                 .then(data => {
                     if (data.success) {
-                        const categoryGrid = document.getElementById('equipment-grid');
-                        
-                        // ลบข้อความ Loading
+                        const categoryGrid = document.getElementById('category-grid');
                         categoryGrid.innerHTML = '';
                         
-                        // สร้าง card สำหรับแต่ละ category
                         data.categories.forEach(category => {
-                            // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category
-                                        // สร้าง URL ที่ถูกต้องสำหรับแต่ละ category โดยใช้ equipment_detail route
+                            // สร้าง URL สำหรับดูรายละเอียด
                             const detailsUrl = `/admin_equipdetail?category=${encodeURIComponent(category)}`;
                             
-                            // สร้าง card element
-                            const card = document.createElement('div');
-                            card.className = 'equipment-card';
+                            const col = document.createElement('div');
+                            col.className = 'col-sm-6 col-lg-4 mb-4';
                             
-                    
-                            
-                            // เพิ่มเนื้อหาใน card
-                            card.innerHTML = `
-                                <h2>${category}</h2>
-                                <a href="${detailsUrl}" class="details-button">View Details</a>
+                            col.innerHTML = `
+                                <div class="card equipment-card h-100">
+                                    <div class="card-category-icon">
+                                        <i class="fas ${category === 'Cameras' ? 'fa-camera' : 
+                                                       category === 'Lenses' ? 'fa-circle' : 'fa-cogs'}"></i>
+                                    </div>
+                                    <div class="card-body">
+                                        <h2 class="card-title">${category}</h2>
+                                        <p class="card-text">Manage ${category.toLowerCase()} in your inventory.</p>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-0 pb-4">
+                                        <a href="${detailsUrl}" class="btn details-button">
+                                            Manage Details <i class="fas fa-arrow-right ms-2"></i>
+                                        </a>
+                                    </div>
+                                </div>
                             `;
                             
-                            // เพิ่ม card เข้าไปใน grid
-                            categoryGrid.appendChild(card);
+                            categoryGrid.appendChild(col);
                         });
                         
-                        // ถ้าไม่มี category เลย
                         if (data.categories.length === 0) {
-                            categoryGrid.innerHTML = '<p>No equipment categories found.</p>';
+                            categoryGrid.innerHTML = `
+                                <div class="col-12 text-center p-5">
+                                    <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+                                    <p class="lead">No equipment categories found.</p>
+                                </div>
+                            `;
                         }
                     } else {
-                        console.error('Failed to load categories');
-                        document.getElementById('equipment-grid').innerHTML = '<p>Failed to load categories. Please try again later.</p>';
+                        throw new Error('Failed to load categories');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('equipment-grid').innerHTML = '<p>Error loading categories. Please try again later.</p>';
+                    document.getElementById('category-grid').innerHTML = `
+                        <div class="col-12 text-center p-5">
+                            <i class="fas fa-exclamation-circle fa-3x text-danger mb-3"></i>
+                            <p class="lead">Error loading categories. Please try again later.</p>
+                            <button onclick="window.location.reload()" class="btn retry-button mt-3">
+                                <i class="fas fa-sync-alt me-2"></i> Retry
+                            </button>
+                        </div>
+                    `;
                 });
-        
-
-</script>
+        });
+    </script>
+</body>
+</html>
