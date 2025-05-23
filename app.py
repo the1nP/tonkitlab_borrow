@@ -62,34 +62,33 @@ def get_secret_hash(username, client_id, client_secret):
     ).digest()
     return base64.b64encode(dig).decode()
 
-@app.route('/home', endpoint='home')
-def main_page():
-    # ตัวแปรสำหรับรูปโปรไฟล์
+def get_profile_image_url():
+    """ฟังก์ชันช่วยสำหรับดึง URL รูปโปรไฟล์"""
     profile_image_url = None
-    
-    # ตรวจสอบว่าผู้ใช้ล็อกอินหรือไม่
     if 'username' in session and 'access_token' in session:
         try:
-            username = session['username']
             access_token = session['access_token']
             
-            # ดึงข้อมูลผู้ใช้จาก Cognito
             user_response = cognito.get_user(AccessToken=access_token)
             user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
             
-            # ตรวจสอบรูปโปรไฟล์
             if 'custom:profile_image' in user_attributes:
                 s3 = boto3.client('s3', region_name='us-east-1')
                 bucket_name = 'tooltrack-profilepic'
                 profile_key = user_attributes['custom:profile_image']
                 
-                # สร้าง presigned URL สำหรับรูปโปรไฟล์
                 profile_image_url = s3.generate_presigned_url('get_object',
                     Params={'Bucket': bucket_name, 'Key': profile_key},
-                    ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
+                    ExpiresIn=3600
                 )
         except Exception as e:
             print(f"Error getting profile image: {e}")
+    
+    return profile_image_url
+@app.route('/home', endpoint='home')
+def main_page():
+    # ตัวแปรสำหรับรูปโปรไฟล์
+    profile_image_url = get_profile_image_url()
     
     return render_template('home.html', profile_image_url=profile_image_url)
 @app.route('/equipment', endpoint='equipment')
@@ -98,32 +97,7 @@ def equipment_page():
         flash('Please log in first', 'info')
         print("Login")
         return redirect(url_for('login'))
-# ตัวแปรสำหรับรูปโปรไฟล์
-    profile_image_url = None
-    
-    # ตรวจสอบว่าผู้ใช้ล็อกอินหรือไม่
-    if 'username' in session and 'access_token' in session:
-        try:
-            username = session['username']
-            access_token = session['access_token']
-            
-            # ดึงข้อมูลผู้ใช้จาก Cognito
-            user_response = cognito.get_user(AccessToken=access_token)
-            user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
-            
-            # ตรวจสอบรูปโปรไฟล์
-            if 'custom:profile_image' in user_attributes:
-                s3 = boto3.client('s3', region_name='us-east-1')
-                bucket_name = 'tooltrack-profilepic'
-                profile_key = user_attributes['custom:profile_image']
-                
-                # สร้าง presigned URL สำหรับรูปโปรไฟล์
-                profile_image_url = s3.generate_presigned_url('get_object',
-                    Params={'Bucket': bucket_name, 'Key': profile_key},
-                    ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
-                )
-        except Exception as e:
-            print(f"Error getting profile image: {e}")
+    profile_image_url = get_profile_image_url()
     return render_template('equipment.html', profile_image_url=profile_image_url)
 
 @app.route('/profile', endpoint='profile')
