@@ -558,6 +558,11 @@ def return_item():
 @app.route('/admin_req')
 def admin_req():
     try:
+        user_id = session.get('username')
+        if not user_id:
+            flash('You need to log in first.', 'info')
+            return redirect(url_for('login'))
+
         response = BorrowReturnRecordsTable.scan(
             FilterExpression=Attr('StatusReq').eq('Pending')
         )
@@ -763,6 +768,10 @@ def admin_equipdetail():
 @app.route('/admin_equipment')
 def admin_equipment():
     try:
+        user_id = session.get('username')
+        if not user_id:
+            flash('You need to log in first.', 'info')
+            return redirect(url_for('login'))
         # ดึงข้อมูลอุปกรณ์ทั้งหมดจาก DynamoDB
         response = EquipmentTable.scan()
         items = response['Items']
