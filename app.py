@@ -157,6 +157,86 @@ def equipment_page():
     profile_image_url = get_profile_image_url()
     return render_template('equipment.html', profile_image_url=profile_image_url)
 
+@app.route('/update_profile_image', methods=['POST'])
+def update_profile_image():
+    try:
+        # ตรวจสอบว่า user login แล้วหรือไม่
+        if 'username' not in session or 'access_token' not in session:
+            return jsonify({'success': False, 'message': 'Not logged in'}), 401
+        
+        # ตรวจสอบว่ามีไฟล์ที่อัปโหลดมาหรือไม่
+        if 'profile_image' not in request.files:
+            return jsonify({'success': False, 'message': 'No file uploaded'}), 400
+        
+        file = request.files['profile_image']
+        
+        # ตรวจสอบว่าไฟล์มีชื่อหรือไม่
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No selected file'}), 400
+        
+        # ตรวจสอบประเภทไฟล์
+        if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            return jsonify({'success': False, 'message': 'File must be an image (PNG, JPG, JPEG, GIF)'}), 400
+        
+        # บีบอัดรูปภาพ
+        compressed_img, content_type = compress_image(
+            file,
+            max_size=(400, 400),
+            quality=85
+        )
+        
+        if not compressed_img:
+            return jsonify({'success': False, 'message': 'Failed to compress image'}), 500
+        
+        # เตรียมข้อมูลสำหรับการอัปโหลดไปยัง S3
+        s3 = boto3.client('s3', region_name='us-east-1')
+        bucket_name = 'tooltrack-profilepic'
+        
+        # สร้างชื่อไฟล์แบบไม่ซ้ำกัน
+        username = session['username']
+        file_extension = os.path.splitext(file.filename)[1].lower()
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+        profile_key = f"profile-images/{username}/{unique_filename}"
+        
+        try:
+            # อัปโหลดไปยัง S3
+            s3.upload_fileobj(
+                compressed_img,
+                bucket_name,
+                profile_key,
+                ExtraArgs={
+                    'ContentType': content_type
+                }
+            )
+            
+            # อัพเดตข้อมูลใน Cognito
+            cognito.admin_update_user_attributes(
+                UserPoolId=USER_POOL_ID,
+                Username=username,
+                UserAttributes=[
+                    {'Name': 'custom:profile_image', 'Value': profile_key}
+                ]
+            )
+            
+            # สร้าง URL สำหรับรูปโปรไฟล์ใหม่
+            profile_image_url = s3.generate_presigned_url('get_object',
+                Params={'Bucket': bucket_name, 'Key': profile_key},
+                ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
+            )
+            
+            return jsonify({
+                'success': True,
+                'message': 'Profile image updated successfully',
+                'image_url': profile_image_url
+            })
+            
+        except Exception as e:
+            print(f"Error uploading to S3: {e}")
+            return jsonify({'success': False, 'message': f'Failed to upload image: {str(e)}'}), 500
+            
+    except Exception as e:
+        print(f"Error updating profile image: {e}")
+        return jsonify({'success': False, 'message': f'Failed to update profile image: {str(e)}'}), 500
 @app.route('/profile', endpoint='profile')
 def profile_page():
     try:

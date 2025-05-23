@@ -133,15 +133,106 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // Edit profile image functionality
-            document.querySelector('.edit-profile-image').addEventListener('click', function() {
-                Swal.fire({
-                    title: 'Update Profile Picture',
-                    text: 'This feature is coming soon!',
-                    icon: 'info',
-                    confirmButtonColor: '#91766E'
-                });
+        // Edit profile image functionality
+        document.querySelector('.edit-profile-image').addEventListener('click', function() {
+            Swal.fire({
+                title: 'อัพเดทรูปโปรไฟล์',
+                html: `
+                    <div class="upload-preview mb-3">
+                        <img id="preview-image" src="{{ user_info.profile_image }}" style="max-width: 200px; max-height: 200px; border-radius: 50%;">
+                    </div>
+                    <input type="file" id="profile-upload" class="swal2-input" accept="image/*" style="display: none;">
+                    <label for="profile-upload" class="btn" style="background-color: #91766E; color: white;">
+                        <i class="fas fa-upload me-2"></i>เลือกรูปภาพ
+                    </label>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'บันทึก',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#91766E',
+                cancelButtonColor: '#6c757d',
+                didOpen: () => {
+                    const fileInput = document.getElementById('profile-upload');
+                    const previewImage = document.getElementById('preview-image');
+                    
+                    fileInput.addEventListener('change', function(e) {
+                        const file = e.target.files[0];
+                        if (file) {
+                            // ตรวจสอบนามสกุลไฟล์
+                            const validExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                            const fileExtension = file.name.split('.').pop().toLowerCase();
+                            
+                            if (!validExtensions.includes(fileExtension)) {
+                                Swal.showValidationMessage(
+                                    `กรุณาเลือกไฟล์รูปภาพเท่านั้น (${validExtensions.join(', ')})`
+                                );
+                                return;
+                            }
+                            
+                            // ตรวจสอบขนาดไฟล์ (ไม่เกิน 2MB)
+                            if (file.size > 2 * 1024 * 1024) {
+                                Swal.showValidationMessage(
+                                    'ขนาดไฟล์ต้องไม่เกิน 2MB'
+                                );
+                                return;
+                            }
+                            
+                            // แสดงตัวอย่างรูปภาพ
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                previewImage.src = e.target.result;
+                            }
+                            reader.readAsDataURL(file);
+                        }
+                    });
+                },
+                preConfirm: () => {
+                    const fileInput = document.getElementById('profile-upload');
+                    
+                    if (!fileInput.files[0]) {
+                        Swal.showValidationMessage('กรุณาเลือกรูปภาพ');
+                        return false;
+                    }
+                    
+                    // สร้าง FormData สำหรับอัพโหลดไฟล์
+                    const formData = new FormData();
+                    formData.append('profile_image', fileInput.files[0]);
+                    
+                    // ส่งข้อมูลไปยัง API
+                    return fetch('{{ url_for("update_profile_image") }}', {
+                        method: 'POST',
+                        body: formData,
+                        credentials: 'same-origin'
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('เกิดข้อผิดพลาดในการอัพโหลดรูปภาพ');
+                        }
+                        return response.json();
+                    })
+                    .catch(error => {
+                        Swal.showValidationMessage(
+                            `อัพโหลดล้มเหลว: ${error}`
+                        );
+                    });
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    // อัพเดทรูปภาพโปรไฟล์บนหน้าเว็บ
+                    const profileImages = document.querySelectorAll('.profile-image');
+                    profileImages.forEach(img => {
+                        img.src = result.value.image_url + '?t=' + new Date().getTime();
+                    });
+                    
+                    Swal.fire({
+                        title: 'อัพเดทสำเร็จ!',
+                        text: 'รูปโปรไฟล์ของคุณได้รับการอัพเดทแล้ว',
+                        icon: 'success',
+                        confirmButtonColor: '#91766E'
+                    });
+                }
             });
+        });
             
             // Edit profile button functionality
             document.querySelector('.edit-profile-btn').addEventListener('click', function() {
