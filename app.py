@@ -9,6 +9,9 @@ import hmac
 import hashlib
 import base64
 import json
+import os
+import uuid
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 def get_secrets():
@@ -107,7 +110,7 @@ def profile_page():
 
         # สร้าง S3 client
         s3 = boto3.client('s3', region_name='us-east-1')
-        bucket_name = 'your-bucket-name'  # เปลี่ยนเป็นชื่อ bucket ของคุณ
+        bucket_name = 'tooltrack-profilepic'  # ใช้ชื่อ bucket ของคุณ
 
         # ดึงข้อมูลผู้ใช้จาก Cognito
         response = cognito.get_user(AccessToken=access_token)
@@ -116,14 +119,19 @@ def profile_page():
         # สร้าง presigned URL สำหรับรูปโปรไฟล์
         profile_image_url = None
         try:
-            profile_key = f"profile-images/{username}.jpg"  # หรือนามสกุลไฟล์อื่นๆ ตามที่คุณใช้
-            profile_image_url = s3.generate_presigned_url('get_object',
-                Params={'Bucket': bucket_name, 'Key': profile_key},
-                ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
-            )
+            # ตรวจสอบว่ามี custom attribute สำหรับรูปโปรไฟล์หรือไม่
+            if 'custom:profile_image' in user_attributes:
+                profile_key = user_attributes['custom:profile_image']
+                profile_image_url = s3.generate_presigned_url('get_object',
+                    Params={'Bucket': bucket_name, 'Key': profile_key},
+                    ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
+                )
         except Exception as e:
             print(f"Error getting profile image: {e}")
-            profile_image_url = url_for('static', filename='images/profile.png')  # ใช้รูปเริ่มต้นถ้าไม่มีรูปใน S3
+        
+        # ถ้าไม่มีรูป ให้ใช้รูปเริ่มต้น
+        if not profile_image_url:
+            profile_image_url = url_for('static', filename='images/profile.png')
 
         user_info = {
             'username': username,
@@ -149,7 +157,7 @@ def profile_page():
         print(f"Error: {error_message}")
         flash(error_message, 'error')
         return redirect(url_for('login'))
-
+    
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'username' in session and 'access_token' in session:
@@ -260,11 +268,15 @@ def signup():
         phone = request.form['phone']
         club_member = request.form['club-member']
         dob = request.form['dob']
+        
+        # รับไฟล์รูปภาพแต่ยังไม่อัปโหลด - เก็บไว้ใน session ชั่วคราว
+        profile_pic = request.files.get('profile-pic')
 
         # ตรวจสอบรหัสผ่าน
         if password != confirm_password:
             return "Passwords do not match!", 400
         secret_hash = get_secret_hash(username, APP_CLIENT_ID, CLIENT_SECRET)
+        
         # สร้างผู้ใช้ใน Cognito
         try:
             response = cognito.sign_up(
@@ -283,6 +295,32 @@ def signup():
                     {'Name': 'custom:role', 'Value': 'user'}
                 ]
             )
+            
+            # เตรียมข้อมูลรูปภาพสำหรับการอัปโหลดภายหลัง (หลังจากยืนยัน OTP)
+            if profile_pic and profile_pic.filename:
+                # ตรวจสอบว่าเป็นไฟล์รูปภาพหรือไม่
+                if not profile_pic.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                    return jsonify({'status': 'error', 'message': 'File must be an image (PNG, JPG, JPEG, GIF)'})
+                
+                # บันทึกไฟล์ชั่วคราวใน server
+                temp_dir = os.path.join(os.getcwd(), 'temp_uploads')
+                os.makedirs(temp_dir, exist_ok=True)
+                
+                # สร้างชื่อไฟล์ชั่วคราวที่ไม่ซ้ำกัน
+                file_extension = os.path.splitext(profile_pic.filename)[1].lower()
+                temp_filename = f"{uuid.uuid4()}{file_extension}"
+                temp_filepath = os.path.join(temp_dir, temp_filename)
+                
+                # บันทึกไฟล์ชั่วคราว
+                profile_pic.save(temp_filepath)
+                
+                # เก็บข้อมูลเกี่ยวกับไฟล์ไว้ใน session
+                session['temp_profile_pic'] = {
+                    'path': temp_filepath,
+                    'content_type': profile_pic.content_type,
+                    'original_filename': profile_pic.filename
+                }
+            
             # เก็บ username ไว้ใน session เพื่อใช้ในการยืนยัน
             session['temp_username'] = username
             # ส่งการแจ้งเตือนเพื่อขอรหัส OTP ผ่าน SweetAlert
@@ -291,9 +329,8 @@ def signup():
             error_message = e.response['Error']['Message']
             print(f"Error: {error_message}")
             return jsonify({'status': 'error', 'message': error_message})
-      
-
     return render_template('signup.html')
+  
 
 @app.route('/verify-otp', methods=['POST'])
 def verify_otp():
@@ -315,15 +352,57 @@ def verify_otp():
             SecretHash=secret_hash
         )
         
-        # ลบ username ชั่วคราวจาก session
+        # หลังจากยืนยัน OTP สำเร็จ ตรวจสอบว่ามีการเตรียมรูปโปรไฟล์ไว้หรือไม่
+        profile_image_key = None
+        temp_profile_pic = session.get('temp_profile_pic')
+        
+        if temp_profile_pic:
+            try:
+                # สร้าง S3 client
+                s3 = boto3.client('s3', region_name='us-east-1')
+                bucket_name = 'tooltrack-profilepic'  # เปลี่ยนเป็นชื่อ bucket ของคุณ
+                
+                # เตรียมข้อมูลสำหรับการอัปโหลด
+                file_extension = os.path.splitext(temp_profile_pic['original_filename'])[1].lower()
+                unique_filename = f"{uuid.uuid4()}{file_extension}"
+                profile_image_key = f"profile-images/{username}/{unique_filename}"
+                
+                # อ่านไฟล์ชั่วคราวและอัปโหลดไปยัง S3
+                with open(temp_profile_pic['path'], 'rb') as file_data:
+                    s3.upload_fileobj(
+                        file_data,
+                        bucket_name,
+                        profile_image_key,
+                        ExtraArgs={
+                            'ContentType': temp_profile_pic['content_type']
+                        }
+                    )
+                
+                # ลบไฟล์ชั่วคราวหลังจากอัปโหลดเสร็จ
+                os.remove(temp_profile_pic['path'])
+                
+                # อัพเดต user attributes ใน Cognito
+                cognito.admin_update_user_attributes(
+                    UserPoolId=USER_POOL_ID,
+                    Username=username,
+                    UserAttributes=[
+                        {'Name': 'custom:profile_image', 'Value': profile_image_key}
+                    ]
+                )
+                
+            except Exception as e:
+                print(f"Error uploading profile image: {e}")
+        
+        # ลบข้อมูลชั่วคราวจาก session
         session.pop('temp_username', None)
+        session.pop('temp_profile_pic', None)
         
         return jsonify({'status': 'success', 'message': 'Your account has been verified successfully!'})
     except ClientError as e:
         error_message = e.response['Error']['Message']
         print(f"Error: {error_message}")
         return jsonify({'status': 'error', 'message': error_message})
-
+    
 @app.route('/resend-otp', methods=['POST'])
 def resend_otp():
     try:
@@ -1246,4 +1325,4 @@ def admin_profile():
         return redirect(url_for('admin_req'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=2004, debug=True)
+    app.run(host='0.0.0.0', port=2000, debug=True)
