@@ -64,33 +64,34 @@ def get_secret_hash(username, client_id, client_secret):
 
 @app.route('/home', endpoint='home')
 def main_page():
-    username = session.get('username')
-    access_token = session.get('access_token')
-    # if not username or not access_token:
-    #     flash('You need to log in first.', 'error')
-    #     return redirect(url_for('login'))
-    try:
-        pass
-        # ดึงข้อมูลผู้ใช้จาก Cognito
-        # response = cognito.get_user(
-        #     AccessToken=access_token
-        # )
-        # user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
-        # role = user_attributes.get('custom:role')
-
-        # ตรวจสอบบทบาทของผู้ใช้
-        # if role == 'admin':
-        #     return render_template('admin_home.html')
-        # else:
-        #     return render_template('home.html')
-
-    except ClientError as e:
-        error_message = e.response['Error']['Message']
-        print(f"Error: {error_message}")
-        flash(error_message, 'error')
-        return redirect(url_for('login'))
-    return render_template('home.html')
-
+    # ตัวแปรสำหรับรูปโปรไฟล์
+    profile_image_url = None
+    
+    # ตรวจสอบว่าผู้ใช้ล็อกอินหรือไม่
+    if 'username' in session and 'access_token' in session:
+        try:
+            username = session['username']
+            access_token = session['access_token']
+            
+            # ดึงข้อมูลผู้ใช้จาก Cognito
+            user_response = cognito.get_user(AccessToken=access_token)
+            user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
+            
+            # ตรวจสอบรูปโปรไฟล์
+            if 'custom:profile_image' in user_attributes:
+                s3 = boto3.client('s3', region_name='us-east-1')
+                bucket_name = 'tooltrack-profilepic'
+                profile_key = user_attributes['custom:profile_image']
+                
+                # สร้าง presigned URL สำหรับรูปโปรไฟล์
+                profile_image_url = s3.generate_presigned_url('get_object',
+                    Params={'Bucket': bucket_name, 'Key': profile_key},
+                    ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
+                )
+        except Exception as e:
+            print(f"Error getting profile image: {e}")
+    
+    return render_template('home.html', profile_image_url=profile_image_url)
 @app.route('/equipment', endpoint='equipment')
 def equipment_page():
     if 'username' not in session:
