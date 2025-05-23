@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin - ToolTrack</title>
+    <title>Admin Dashboard - ToolTrack</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for icons -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/shared_navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared_navbar.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 <body>
     <header>
@@ -25,7 +24,7 @@
                     </a>
                 </div>
                 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 
@@ -52,25 +51,26 @@
             </div>
         </nav>
     </header>
-    
-    <main>
+
+    <main class="hero-section">
+        <div class="background-overlay"></div>
+        <div class="camera-background"></div>
+        
         <div class="container h-100">
-            <div class="row h-100 align-items-center">
-                <div class="col-md-6 text-md-start text-center mb-4 mb-md-0">
+            <div class="row h-100 align-items-center justify-content-center">
+                <div class="col-12 text-center welcome-content">
                     <div class="welcome-text">
-                        <h1 class="display-2 fw-bold">Hello Admin!</h1>
-                        <h2 class="display-4">{{ session.username }}</h2>
-                        <p class="lead mt-4">Welcome to ToolTrack Administration Panel</p>
-                        <div class="mt-5">
-                            <a href="{{ url_for('admin_equipment') }}" class="btn btn-lg explore-btn">
-                                <i class="fas fa-cogs me-2"></i> Manage Equipment
+                        <h1 class="display-1 fw-bold">Welcome Back, Admin!</h1>
+                        <h2 class="display-3 username-text mb-4">{{ session.username }}</h2>
+                        <p class="lead mb-5">Manage your equipment lending system with ease</p>
+                        <div class="button-group">
+                            <a href="{{ url_for('admin_equipment') }}" class="btn btn-lg explore-btn me-3">
+                                <i class="fas fa-cogs me-2"></i>Manage Equipment
+                            </a>
+                            <a href="{{ url_for('admin_req') }}" class="btn btn-lg request-btn">
+                                <i class="fas fa-clipboard-list me-2"></i>View Requests
                             </a>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-6 text-center">
-                    <div class="camera-animation">
-                        <img src="{{ url_for('static', filename='images/camera.png') }}" alt="Camera" class="img-fluid camera-img" />
                     </div>
                 </div>
             </div>
@@ -79,36 +79,5 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-        <script>
-          if ('{{ category }}' == 'success') {
-            Swal.fire({
-              icon: 'success',
-              title: 'Success!',
-              text: '{{ message }}',
-              confirmButtonColor: '#91766E'
-            });
-          } else if ('{{ category }}' == 'error') {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Error',
-                  text: '{{ message }}',
-                  confirmButtonColor: '#91766E'
-              });
-          } else if ('{{ category }}' == 'info') {
-              Swal.fire({
-                  icon: 'info',
-                  title: 'Information',
-                  text: '{{ message }}',
-                  confirmButtonColor: '#91766E'
-              });
-          }
-        </script>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
 </body>
 </html>

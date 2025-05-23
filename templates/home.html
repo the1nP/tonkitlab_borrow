@@ -58,24 +58,29 @@
         </nav>
     </header>
     
-    <main>
+    <main class="hero-section">
+        <div class="background-overlay"></div>
+        <div class="camera-background"></div>
+        
         <div class="container h-100">
-            <div class="row h-100 align-items-center">
-                <div class="col-md-6 text-md-start text-center mb-4 mb-md-0">
+            <div class="row h-100 align-items-center justify-content-center">
+                <div class="col-12 text-center welcome-content">
                     <div class="welcome-text">
-                        <h1 class="display-2 fw-bold">Hello!</h1>
-                        <h2 class="display-4">{{ session.username if session.username else 'Guest' }}</h2>
-                        <p class="lead mt-4">Welcome to ToolTrack, your equipment management system.</p>
-                        <div class="mt-5">
-                            <a href="{{ url_for('equipment') }}" class="btn btn-lg explore-btn">
-                                <i class="fas fa-camera me-2"></i> Explore Equipment
+                        <h1 class="display-1 fw-bold">Welcome to ToolTrack!</h1>
+                        <h2 class="display-3 username-text mb-4">
+                            {{ session.username if session.username else 'Guest' }}
+                        </h2>
+                        <p class="lead mb-5">Your equipment management system</p>
+                        <div class="button-group">
+                            <a href="{{ url_for('equipment') }}" class="btn btn-lg explore-btn me-3">
+                                <i class="fas fa-camera me-2"></i>Explore Equipment
                             </a>
+                            {% if not session.username %}
+                            <a href="{{ url_for('login') }}" class="btn btn-lg request-btn">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login Now
+                            </a>
+                            {% endif %}
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-6 text-center">
-                    <div class="camera-animation">
-                        <img src="{{ url_for('static', filename='images/camera.png') }}" alt="Camera" class="img-fluid camera-img" />
                     </div>
                 </div>
             </div>
