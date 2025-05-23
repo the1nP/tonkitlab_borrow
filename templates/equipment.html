@@ -42,8 +42,12 @@
                     <div class="user-section d-flex align-items-center">
                         <div class="user me-3">
                             <a href="{{ url_for('profile') }}" class="d-flex align-items-center text-decoration-none">
+                            {% if profile_image_url %}
+                                <img src="{{ profile_image_url }}" alt="Profile" class="profile-icon" />
+                            {% else %}
                                 <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" class="profile-icon" />
-                                <span class="username ms-2">{{ session.username }}</span>
+                            {% endif %}                                
+                            <span class="username ms-2">{{ session.username }}</span>
                             </a>
                         </div>
                         <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-light logout-button">
