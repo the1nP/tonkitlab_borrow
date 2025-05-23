@@ -11,7 +11,9 @@ import base64
 import json
 import os
 import uuid
+import io
 from werkzeug.utils import secure_filename
+from PIL import Image
 
 app = Flask(__name__)
 def get_secrets():
@@ -85,6 +87,61 @@ def get_profile_image_url():
             print(f"Error getting profile image: {e}")
     
     return profile_image_url
+
+# เพิ่มฟังก์ชันนี้ไว้บริเวณด้านบนของไฟล์
+def compress_image(image_file, max_size=(800, 800), quality=85):
+    """
+    บีบอัดรูปภาพให้มีขนาดและคุณภาพเหมาะสมสำหรับแสดงบนเว็บไซต์
+    
+    Args:
+        image_file: ไฟล์รูปภาพหรือ path ของไฟล์
+        max_size: ขนาดสูงสุด (กว้าง, สูง)
+        quality: คุณภาพในการบีบอัด (1-100)
+        
+    Returns:
+        BytesIO object ที่มีข้อมูลรูปภาพที่บีบอัดแล้ว, content type
+    """
+    try:
+        img = Image.open(image_file)
+        
+        # แปลงเป็น RGB ถ้าเป็นโหมด RGBA
+        if img.mode == 'RGBA':
+            img = img.convert('RGB')
+        
+        # ปรับขนาดรูปภาพโดยรักษาอัตราส่วน
+        img.thumbnail(max_size, Image.LANCZOS)
+        
+        # บันทึกลงในหน่วยความจำ
+        buffer = io.BytesIO()
+        
+        # ดึงนามสกุลไฟล์
+        if hasattr(image_file, 'filename'):
+            filename = image_file.filename
+        else:
+            filename = image_file if isinstance(image_file, str) else "image.jpg"
+            
+        file_extension = os.path.splitext(filename)[1].lower()
+        
+        # กำหนด content_type ตามนามสกุลไฟล์
+        content_type = 'image/jpeg'
+        if file_extension == '.png':
+            img.save(buffer, 'PNG', optimize=True)
+            content_type = 'image/png'
+        elif file_extension == '.gif':
+            img.save(buffer, 'GIF')
+            content_type = 'image/gif'
+        else:
+            img.save(buffer, 'JPEG', quality=quality, optimize=True)
+            content_type = 'image/jpeg'
+        
+        # ย้อนกลับไปที่จุดเริ่มต้นของ buffer
+        buffer.seek(0)
+        
+        return buffer, content_type
+    
+    except Exception as e:
+        print(f"Error compressing image: {e}")
+        return None, None
 @app.route('/home', endpoint='home')
 def main_page():
     # ตัวแปรสำหรับรูปโปรไฟล์
@@ -361,35 +418,42 @@ def verify_otp():
             try:
                 # สร้าง S3 client
                 s3 = boto3.client('s3', region_name='us-east-1')
-                bucket_name = 'tooltrack-profilepic'  # เปลี่ยนเป็นชื่อ bucket ของคุณ
+                bucket_name = 'tooltrack-profilepic'
                 
-                # เตรียมข้อมูลสำหรับการอัปโหลด
-                file_extension = os.path.splitext(temp_profile_pic['original_filename'])[1].lower()
-                unique_filename = f"{uuid.uuid4()}{file_extension}"
-                profile_image_key = f"profile-images/{username}/{unique_filename}"
+                # บีบอัดรูปภาพ
+                compressed_img, content_type = compress_image(
+                    temp_profile_pic['path'],
+                    max_size=(400, 400),  # ขนาดเหมาะสมสำหรับรูปโปรไฟล์
+                    quality=85
+                )
                 
-                # อ่านไฟล์ชั่วคราวและอัปโหลดไปยัง S3
-                with open(temp_profile_pic['path'], 'rb') as file_data:
+                if compressed_img:
+                    # เตรียมข้อมูลสำหรับการอัปโหลด
+                    file_extension = os.path.splitext(temp_profile_pic['original_filename'])[1].lower()
+                    unique_filename = f"{uuid.uuid4()}{file_extension}"
+                    profile_image_key = f"profile-images/{username}/{unique_filename}"
+                    
+                    # อัปโหลดไฟล์ที่บีบอัดแล้วไปยัง S3
                     s3.upload_fileobj(
-                        file_data,
+                        compressed_img,
                         bucket_name,
                         profile_image_key,
                         ExtraArgs={
-                            'ContentType': temp_profile_pic['content_type']
+                            'ContentType': content_type
                         }
+                    )
+                
+                    # อัพเดต user attributes ใน Cognito
+                    cognito.admin_update_user_attributes(
+                        UserPoolId=USER_POOL_ID,
+                        Username=username,
+                        UserAttributes=[
+                            {'Name': 'custom:profile_image', 'Value': profile_image_key}
+                        ]
                     )
                 
                 # ลบไฟล์ชั่วคราวหลังจากอัปโหลดเสร็จ
                 os.remove(temp_profile_pic['path'])
-                
-                # อัพเดต user attributes ใน Cognito
-                cognito.admin_update_user_attributes(
-                    UserPoolId=USER_POOL_ID,
-                    Username=username,
-                    UserAttributes=[
-                        {'Name': 'custom:profile_image', 'Value': profile_image_key}
-                    ]
-                )
                 
             except Exception as e:
                 print(f"Error uploading profile image: {e}")
@@ -403,7 +467,6 @@ def verify_otp():
         error_message = e.response['Error']['Message']
         print(f"Error: {error_message}")
         return jsonify({'status': 'error', 'message': error_message})
-    
 @app.route('/resend-otp', methods=['POST'])
 def resend_otp():
     try:
