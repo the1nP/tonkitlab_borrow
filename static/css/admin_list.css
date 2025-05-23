@@ -7,65 +7,220 @@ body {
 }
 
 /* Main Content */
+main {
+    min-height: 85vh;
+    background-color: #f6f8fa;
+    padding: 40px 20px;
+}
+
+/* List Table Styles */
 .list-table {
+    background-color: #ffffff;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
     border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 5px solid #91766E;
+    padding: 30px;
+}
+
+.list-table .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .list-table th {
-    background-color: #91766E;
-    color: #F6ECE3;
+    color: #91766E;
     font-family: 'Playfair Display', serif;
     font-weight: 600;
-    border: none;
-    padding: 1rem;
+    padding: 15px 12px;
+    font-size: 15px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: transparent;
+    border-bottom: 2px solid #dee2e6;
 }
 
 .list-table td {
-    padding: 1rem;
+    padding: 15px 12px;
     vertical-align: middle;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    font-size: 14px;
+    font-family: 'Poppins', sans-serif;
 }
 
 .list-table tbody tr:hover {
-    background-color: rgba(145, 118, 110, 0.05);
+    background-color: #f8f9fa;
+    transition: background-color 0.3s ease;
+}
+
+/* Status and Request Type Badges */
+.status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Request Type */
+.request-type {
+    font-weight: 500;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+}
+
+.request-borrow {
+    color: #91766E;
+}
+
+.request-return {
+    color: #2c3e50;
+}
+
+/* Equipment Name */
+.equipment-name {
+    font-weight: 500;
+    color: #333;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Date Info */
+.date-info {
+    font-weight: 500;
+    color: #6c757d;
+    font-family: 'Poppins', sans-serif;
+}
+
+.pending-date {
+    color: #6c757d;
+    font-style: italic;
+    font-size: 13px;
+}
+
+/* Typography */
+.display-4 {
+    font-family: 'Playfair Display', serif;
+    color: #2c3e50;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
 }
 
 /* Status Badges */
 .badge {
-    padding: 0.5rem 1rem;
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
     font-weight: 500;
-    font-size: 0.875rem;
-}
-
-/* Typography */
-h1.display-4 {
-    font-family: 'Playfair Display', serif;
-    color: #3a3a3a;
-}
-
-.lead {
     font-family: 'Poppins', sans-serif;
+}
+
+.bg-success {
+    background-color: #d4edda !important;
+    color: #155724 !important;
+}
+
+.bg-warning {
+    background-color: #fff3cd !important;
+    color: #856404 !important;
+}
+
+.bg-danger {
+    background-color: #f8d7da !important;
+    color: #721c24 !important;
+}
+
+/* Equipment Name */
+td:nth-child(4) {
+    font-weight: 500;
+    color: #333;
+}
+
+/* Date Info */
+td:nth-child(3),
+td:nth-child(5),
+td:nth-child(6) {
     color: #6c757d;
+    font-weight: 500;
+}
+
+/* Request Type */
+td:nth-child(7) {
+    font-weight: 500;
+}
+
+td:nth-child(7):contains('borrow') {
+    color: #91766E;
+}
+
+td:nth-child(7):contains('return') {
+    color: #2c3e50;
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+    .list-table {
+        margin: 20px;
+    }
+}
+
 @media (max-width: 991px) {
     .list-table {
-        font-size: 0.9rem;
+        padding: 20px;
+    }
+    
+    .list-table th, 
+    .list-table td {
+        padding: 10px 8px;
+        font-size: 13px;
     }
     
     .badge {
-        padding: 0.4rem 0.8rem;
+        padding: 4px 8px;
+        font-size: 12px;
     }
 }
 
 @media (max-width: 768px) {
-    h1.display-4 {
-        font-size: 2.5rem;
+    .list-table {
+        padding: 15px;
     }
     
-    .list-table {
-        font-size: 0.8rem;
+    .list-table th, 
+    .list-table td {
+        padding: 8px;
+        font-size: 12px;
+    }
+    
+    .display-4 {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .status-badge {
+        padding: 3px 6px;
+        font-size: 11px;
     }
 }

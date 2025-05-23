@@ -6,197 +6,102 @@ body {
     min-height: 100vh;
 }
 
-header {
-    border-bottom: 1px solid #91766E;
-}
-
-/* Navigation Bar */
-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background-color: #91766E;
-    height: 60px;
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-nav .logo img {
-    height: 140px;
-}
-
-ul.menu {
-    list-style: none;
-    margin: 0 auto;
-    padding: 0;
-    display: flex;
-    align-items: center;
-}
-
-ul.menu li {
-    margin: 0 15px;
-}
-
-ul.menu li a {
-    text-decoration: none;
-    color: #F6ece3;
-    font-size: 35px;
-    padding: 10px 15px;
-    transition: color 0.3s ease;
-    font-family: 'Playfair Display';
-    text-shadow: #000000;
-}
-
-ul.menu li a:hover {
-    color: #000000;
-}
-
-/* Notification Icon */
-.notification {
-    position: relative; /* ใช้สำหรับวาง badge */
-    display: flex;
-    align-items: center; /* จัดให้อยู่กึ่งกลางในแนวตั้ง */
-    margin-right: 10px; /* ระยะห่างระหว่างกระดิ่งกับไอคอน User */
-}
-
-.notification img {
-    width: 35px; /* ขนาดของไอคอนกระดิ่ง */
-    height: 35px;
-    cursor: pointer; /* เปลี่ยนเป็น pointer เมื่อ hover */
-}
-
-
-.notification-badge {
-    position: absolute; /* กำหนดตำแหน่ง badge */
-    top: -5px; /* ตำแหน่งด้านบน */
-    right: -5px; /* ตำแหน่งด้านขวา */
-    background-color: red; /* สีพื้นหลังของ badge */
-    color: white; /* สีของตัวอักษร */
-    font-size: 12px; /* ขนาดตัวอักษร */
-    font-weight: bold;
-    padding: 3px 6px; /* เพิ่มความกว้างและสูงของ badge */
-    border-radius: 50%; /* ทำให้ badge เป็นวงกลม */
-    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2); /* เพิ่มเงา */
-}
-
-/* Notification Icon Hover */
-.notification img:hover {
-    filter: brightness(0); /* เปลี่ยนไอคอนให้เป็นสีดำ */
-    cursor: pointer;
-}
-
-/* Profile Icon Hover */
-.user img:hover {
-    filter: brightness(0); /* เปลี่ยนไอคอนให้เป็นสีดำ */
-    cursor: pointer;
-}
-
-/* Username Hover */
-.username a {
-    text-decoration: none;
-    font-size: 20px;
-    color: #000;
-    font-weight: bold;
-    font-family: 'Playfair Display';
-    transition: color 0.3s ease; /* เพิ่มการเปลี่ยนสีแบบ smooth */
-}
-
-.username a:hover {
-    color: #000000; /* เปลี่ยนเป็นสีดำ */
-    text-decoration: underline; /* เพิ่มเส้นใต้เมื่อชี้เม้าส์ */
-}
-
-
-/* User Section */
-.user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.user img {
-    width: 50px;
-    height: 50px;
-}
-
-.username a {
-    text-decoration: none;
-    font-size: 20px;
-    color: #F6ece3;
-    font-weight: bold;
-    font-family: 'Playfair Display';
-}
-
-.user-section {
-    display: flex;
-    align-items: center; /* จัดให้อยู่กึ่งกลางในแนวตั้ง */
-    gap: 20px; /* เพิ่มระยะห่างระหว่างไอคอนแจ้งเตือนและผู้ใช้ */
-}
-
-/* Main Section */
+/* Main Content */
 main {
+    min-height: 85vh;
+    background-color: #f6f8fa;
     padding: 40px 20px;
 }
 
 .request h1 {
     font-family: 'Playfair Display', serif;
-    font-size: 3rem;  /* เพิ่มขนาดจาก 2.5rem เป็น 3rem */
-    font-weight: 700; /* เพิ่ม font-weight ให้ตัวหนาขึ้น */
     color: #3a3a3a;
-    margin-bottom: 2rem; /* เพิ่ม margin-bottom */
-    text-align: center;
-    text-transform: capitalize; /* เพิ่มการแปลงข้อความให้ตัวแรกเป็นตัวใหญ่ */
+    margin-bottom: 10px;
 }
 
-/* Table Styles */
+/* Request Card */
 .request-table {
-    background-color: #fff;
+    background-color: #ffffff;
     border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    margin: 20px auto;
-    max-width: 1400px;
+    border: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-top: 5px solid #91766E;
+    padding: 30px;
 }
 
+/* Equipment List Table */
 .request-table table {
     width: 100%;
-    border-collapse: collapse;
-    margin: 0;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-.request-table th {
-    background-color: #91766E;
-    color: #F6ECE3;
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem;
-    font-weight: 600;
-    padding: 15px;
-    text-align: center;
-    border: none;
-}
-
-.request-table td {
-    padding: 12px 15px;
-    text-align: center;
-    border-bottom: 1px solid #eee;
-    color: #333;
-    font-size: 0.95rem;
-}
-
-.request-table tr:hover {
+.request-table thead {
     background-color: #f8f9fa;
 }
 
-/* Button Styles */
+.request-table th {
+    color: #91766E;
+    font-weight: 600;
+    border-top: none;
+    border-bottom: 2px solid #dee2e6;
+    padding: 15px 12px;
+    font-size: 15px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: transparent;
+}
+
+.request-table td {
+    padding: 15px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    font-size: 14px;
+}
+
+.request-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.3s ease;
+}
+
+/* Status Colors */
+.status-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-approved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-rejected {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Approve Button */
 .approve-button {
     background-color: #91766E;
     color: white;
     border: none;
-    padding: 8px 16px;
     border-radius: 30px;
-    cursor: pointer;
-    font-size: 0.9rem;
+    padding: 6px 14px;
+    font-size: 14px;
     font-weight: 500;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
@@ -206,64 +111,86 @@ main {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.approve-button:active {
-    transform: translateY(0);
-}
-
 .approve-button:disabled {
-    background-color: #cccccc;
+    background-color: #dee2e6;
+    color: #6c757d;
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
-/* Status Colors */
-.status-pending {
-    color: #f0ad4e;
-    font-weight: 500;
+/* Typography */
+.request-header {
+    font-family: 'Playfair Display', serif;
+    color: #2c3e50;
+   
+    margin-bottom: 10px;
 }
 
-.status-approved {
-    color: #5cb85c;
-    font-weight: 500;
+.lead {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin-bottom: 2rem;
 }
 
-.status-rejected {
-    color: #d9534f;
-    font-weight: 500;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .request-table {
-        margin: 20px;
-    }
-}
-
+/* Responsive Typography */
 @media (max-width: 991px) {
-    .request h1 {
-        font-size: 2.5rem; /* ปรับขนาดสำหรับหน้าจอขนาดกลาง */
+    .request-header {
+        font-size: 2.5rem;
     }
     
-    .request-table {
-        overflow-x: auto;
-    }
-    
-    .request-table table {
-        min-width: 900px;
+    .lead {
+        font-size: 1.1rem;
     }
 }
 
 @media (max-width: 768px) {
-    main {
-        padding: 20px 10px;
+    .request-header {
+        font-size: 2rem;
     }
     
+    .lead {
+        font-size: 1rem;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+    .request-table {
+        padding: 20px;
+    }
+    
+    .request-table th, 
+    .request-table td {
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+
+    .status-badge {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
+    .approve-button {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 768px) {
     .request h1 {
-        font-size: 2rem; /* ปรับขนาดสำหรับหน้าจอขนาดเล็ก */
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 576px) {
+    .request-table {
+        padding: 15px;
     }
     
     .approve-button {
-        padding: 6px 12px;
-        font-size: 0.85rem;
+        padding: 4px 8px;
+        font-size: 12px;
     }
 }

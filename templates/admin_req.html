@@ -55,59 +55,69 @@
         </nav>
     </header>
     
-    <main>
-        <section class="request">
-            <h1>Request</h1>
-    
-            <!-- Borrowed equipment table -->
-            <div class="request-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>User</th>
-                            <th>Borrow Date</th>
-                            <th>Item</th>
-                            <th>Due Date</th>
-                            <th>Return Date</th>
-                            <th>Request Type</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for record in records %}
-                        <tr>
-                            <td>{{ loop.index }}</td>
-                            <td>{{ record.user_id }}</td>
-                            <td>{{ record.record_date }}</td>
-                            <td>{{ record.equipment_name }}</td>
-                            <td>
-                                {% if record.RequestType == 'borrow' %}
-                                    {% if record.StatusReq == 'Approved' %}
-                                        {{ record.due_date }}
-                                    {% else %}
-                                        Will be set when approved
-                                    {% endif %}
-                                {% else %}
-                                    {{ record.due_date }}
-                                {% endif %}
-                            </td>
-                            <td>{{ record.get('return_date', '-') }}</td>
-                            <td>{{ record.RequestType }}</td>
-                            <td>{{ record.StatusReq }}</td>
-                            <td>
-                                <button onclick="approveRequest('{{ record.RequestType }}', '{{ record.equipment_name }}', '{{ record.equipment_id }}', '{{ record.user_id }}', '{{ record.record_id }}')" 
-                                        class="approve-button">
-                                    Approve
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <main class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <h1 class="display-4 fw-bold request-header">Request</h1>
+                    <p class="lead text-muted">Manage equipment borrowing and return requests</p>
+                </div>
             </div>
-        </section>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="request-table">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>User</th>
+                                        <th>Borrow Date</th>
+                                        <th>Item</th>
+                                        <th>Due Date</th>
+                                        <th>Return Date</th>
+                                        <th>Request Type</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for record in records %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ record.user_id }}</td>
+                                        <td>{{ record.record_date }}</td>
+                                        <td>{{ record.equipment_name }}</td>
+                                        <td>
+                                            {% if record.RequestType == 'borrow' %}
+                                                {% if record.StatusReq == 'Approved' %}
+                                                    {{ record.due_date }}
+                                                {% else %}
+                                                    Will be set when approved
+                                                {% endif %}
+                                            {% else %}
+                                                {{ record.due_date }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ record.get('return_date', '-') }}</td>
+                                        <td>{{ record.RequestType }}</td>
+                                        <td>{{ record.StatusReq }}</td>
+                                        <td>
+                                            <button onclick="approveRequest('{{ record.RequestType }}', '{{ record.equipment_name }}', '{{ record.equipment_id }}', '{{ record.user_id }}', '{{ record.record_id }}')" 
+                                                    class="approve-button">
+                                                Approve
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 <script>
 function approveRequest(reqType, equipmentName, equipmentId, userId, recordId) {
