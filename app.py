@@ -719,8 +719,8 @@ def list_records():
         
         # เรียงลำดับตามวันที่และเวลาล่าสุด
         records.sort(key=lambda x: x['record_date'], reverse=True)
-        
-        return render_template('list.html', records=records)
+        profile_image_url = get_profile_image_url()
+        return render_template('list.html', records=records , profile_image_url=profile_image_url)
     except Exception as e:
         print(f"Error: {e}")
         return "An error occurred while fetching data from DynamoDB."
