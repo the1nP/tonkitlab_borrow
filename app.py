@@ -288,7 +288,7 @@ def profile_page():
         if role == 'admin':
             return render_template('admin_req.html', user_info=user_info)
         else:
-            return render_template('profile.html', user_info=user_info)
+            return render_template('profile.html', user_info=user_info , profile_image_url=profile_image_url)
 
     except ClientError as e:
         error_message = e.response['Error']['Message']
