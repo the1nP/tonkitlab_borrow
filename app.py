@@ -1518,6 +1518,31 @@ def admin_profile():
         print(f"Error in admin_profile: {str(e)}")
         flash('An error occurred while loading profile', 'error')
         return redirect(url_for('admin_req'))
+    
+@app.route('/item_history/<equipment_id>/<item_id>')
+def item_history(equipment_id, item_id):
+    try:
+        # Scan หา record ที่มี item_id ตรงกัน
+        response = BorrowReturnRecordsTable.scan(
+            FilterExpression=Attr('equipment_id').eq(equipment_id) & Attr('item_id').eq(item_id)
+        )
+        records = response.get('Items', [])
+        # เรียงลำดับล่าสุดก่อน
+        records.sort(key=lambda x: x.get('record_date', ''), reverse=True)
+        # เตรียมข้อมูลสำหรับ frontend
+        history = []
+        for rec in records:
+            history.append({
+                'user_id': rec.get('user_id', '-'),
+                'record_date': rec.get('record_date', '-'),
+                'due_date': rec.get('due_date', '-'),
+                'RequestType': rec.get('RequestType', '-'),
+                'return_date': rec.get('return_date', '-')
+            })
+        return jsonify(success=True, history=history)
+    except Exception as e:
+        print(f"Error in item_history: {e}")
+        return jsonify(success=False, message="Failed to get item history")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=2004, debug=True)

@@ -257,28 +257,71 @@
     }
 
     function viewItemHistory(equipmentId, itemId) {
-        // ตัวอย่าง: เรียก API เพื่อดึงประวัติ แล้วแสดงผล (คุณต้องสร้าง endpoint ฝั่ง backend ด้วย)
+        // เช็คว่ามี row ประวัติอยู่แล้วหรือไม่ ถ้ามีให้ toggle
+        const existingRow = document.getElementById(`history-row-${equipmentId}-${itemId}`);
+        if (existingRow) {
+            existingRow.style.display = existingRow.style.display === 'none' ? 'table-row' : 'none';
+            return;
+        }
+        // ดึงข้อมูลประวัติ
         fetch(`/item_history/${equipmentId}/${itemId}`)
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
-                    let historyHtml = '<ul>';
-                    data.history.forEach(record => {
-                        historyHtml += `<li>${record}</li>`;
-                    });
-                    historyHtml += '</ul>';
-                    Swal.fire({
-                        title: `History for ${itemId}`,
-                        html: historyHtml,
-                        confirmButtonColor: '#91766E'
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message
-                    });
+                // หาแถวหลักของ item นี้
+                const itemListBody = document.getElementById(`itemList-${equipmentId}`);
+                const rows = itemListBody.getElementsByTagName('tr');
+                let targetRow = null;
+                for (let row of rows) {
+                    if (row.innerHTML.includes(itemId)) {
+                        targetRow = row;
+                        break;
+                    }
                 }
+                if (!targetRow) return;
+
+                // สร้างแถวใหม่สำหรับแสดงประวัติ
+                const historyRow = document.createElement('tr');
+                historyRow.id = `history-row-${equipmentId}-${itemId}`;
+                historyRow.className = 'bg-light';
+                let historyHtml = '';
+                if (data.success && data.history.length > 0) {
+                    historyHtml += `
+                        <td colspan="8">
+                            <div class="text-start">
+                                <strong>History for ${itemId}</strong>
+                                <div class="table-responsive mt-2">
+                                    <table class="table table-striped table-bordered table-sm mb-0">
+                                        <thead class="table-secondary">
+                                            <tr>
+                                                <th scope="col">User</th>
+                                                <th scope="col">Request</th>
+                                                <th scope="col">Record Date</th>
+                                                <th scope="col">Due Date</th>
+                                                <th scope="col">Return Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.history.map(h => `
+                                                <tr>
+                                                    <td>${h.user_id}</td>
+                                                    <td>${h.RequestType}</td>
+                                                    <td>${h.record_date}</td>
+                                                    <td>${h.due_date}</td>
+                                                    <td>${h.return_date || '-'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    historyHtml = `<td colspan="8"><em>No history found for this item.</em></td>`;
+                }
+                historyRow.innerHTML = historyHtml;
+                // แทรกแถวประวัติหลังแถวหลัก
+                targetRow.parentNode.insertBefore(historyRow, targetRow.nextSibling);
             });
     }
     </script>
