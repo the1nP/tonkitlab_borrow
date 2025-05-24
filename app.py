@@ -55,6 +55,21 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 EquipmentTable = dynamodb.Table('Equipment')
 BorrowReturnRecordsTable = dynamodb.Table('BorrowReturnRecords')
 
+def validate_token():
+    """Validate the access token in the session"""
+    if 'username' in session and 'access_token' in session:
+        try:
+            # Try to use the token to get user info from Cognito
+            cognito.get_user(AccessToken=session['access_token'])
+            return True
+        except ClientError as e:
+            error_message = e.response['Error']['Message']
+            print(f"Token validation error: {error_message}")
+            # Clear the session if token is expired or invalid
+            session.clear()
+            return False
+    return False
+
 def get_secret_hash(username, client_id, client_secret):
     message = username + client_id
     dig = hmac.new(
@@ -240,6 +255,10 @@ def update_profile_image():
 @app.route('/profile', endpoint='profile')
 def profile_page():
     try:
+        # First validate the token
+        if not validate_token():
+            flash('Your session has expired. Please log in again.', 'info')
+            return redirect(url_for('login'))
         username = session.get('username')
         access_token = session.get('access_token')
         if not username or not access_token:
@@ -298,8 +317,14 @@ def profile_page():
     
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+# Check if user is already logged in with a valid token
     if 'username' in session and 'access_token' in session:
-        return redirect(url_for('profile'))
+        if validate_token():
+            return redirect(url_for('profile'))
+        else:
+            # Token is invalid, so we clear the session
+            # (validate_token already did this)
+            pass
     
     if request.method == 'POST':
         username = request.form['username']
