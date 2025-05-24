@@ -1,0 +1,21 @@
+# Python virtual environment
+venv/
+
+# ไฟล์ที่ Python สร้างขึ้น
+__pycache__/
+*.py[cod]
+*.pyo
+
+# ไฟล์ของ IDE เช่น VSCode, PyCharm
+.vscode/
+.idea/
+
+# ไฟล์ log หรืออื่นๆ
+*.log
+
+# ไฟล์ dependency (เลือกได้ว่าจะใส่หรือไม่)
+*.env
+
+# ระบบปฏิบัติการ
+.DS_Store
+Thumbs.db
