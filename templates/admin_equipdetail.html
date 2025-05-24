@@ -87,6 +87,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Item ID</th>
+                                                <th>Serial Number</th>
                                                 <th>Status</th>
                                                 <th>Borrower</th>
                                                 <th>Borrow Date</th>
@@ -141,6 +142,7 @@ function toggleItems(equipmentId) {
                                           item.Status === 'Deleted' ? 'red' : 'orange';
                         row.innerHTML = `
                             <td>${item.ItemID}</td>
+                            <td>${item.SerialNumber || '-'}</td>
                             <td style="color: ${statusColor}">${item.Status}</td>
                             <td>${item.BorrowerID}</td>
                             <td>${item.BorrowDate}</td>
