@@ -207,7 +207,7 @@
             const form = document.querySelector('form');
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 // เช็คค่าที่กรอก
                 const name = document.getElementById('name').value.trim();
                 const category = isAddingNew ? 
@@ -222,6 +222,14 @@
                 formData.append('category', category);
                 formData.append('isMemberRequired', isMemberRequired);
                 formData.append('quantity', quantity);
+
+                // เก็บ serial number ทีละช่อง
+                for (let i = 1; i <= quantity; i++) {
+                    const serialInput = document.querySelector(`[name="serial_number_${i}"]`);
+                    if (serialInput) {
+                        formData.append(`serial_number_${i}`, serialInput.value.trim());
+                    }
+                }
 
                 try {
                     const response = await fetch("{{ url_for('admin_add_equipment') }}", {
