@@ -317,16 +317,24 @@ def profile_page():
     
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-# Check if user is already logged in with a valid token
-    if 'username' in session and 'access_token' in session:
-        if validate_token():
-            return redirect(url_for('profile'))
-        else:
-            # Token is invalid, so we clear the session
-            # (validate_token already did this)
-            pass
+    # For GET requests, clear any expired tokens first
+    if request.method == 'GET':
+        if 'access_token' in session:
+            # Check if the token is valid
+            try:
+                cognito.get_user(AccessToken=session['access_token'])
+                # If valid, redirect to profile
+                return redirect(url_for('profile'))
+            except:
+                # If token validation fails, clear the session
+                session.clear()
+                # Continue to show login page
     
+    # For POST requests, process the login
     if request.method == 'POST':
+        # Clear any existing session data first
+        session.clear()
+        
         username = request.form['username']
         password = request.form['password']
         secret_hash = get_secret_hash(username, APP_CLIENT_ID, CLIENT_SECRET)
@@ -354,6 +362,8 @@ def login():
             access_token = response['AuthenticationResult']['AccessToken']
             session['username'] = username
             session['access_token'] = access_token
+            # Store login time for future reference
+            session['login_time'] = datetime.now().timestamp()
 
             # ดึงข้อมูลผู้ใช้จาก Cognito
             user_response = cognito.get_user(
@@ -377,7 +387,6 @@ def login():
             return redirect(url_for('login'))
 
     return render_template('login.html')
-
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
     if 'username' not in session or 'session' not in session:
