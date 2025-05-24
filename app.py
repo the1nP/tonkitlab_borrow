@@ -1091,6 +1091,17 @@ def admin_add_equipment():
                     'message': 'All fields are required.'
                 })
 
+            # Extract serial numbers for each equipment unit
+            serials = []
+            for i in range(1, quantity + 1):
+                serial = request.form.get(f'serial_number_{i}')
+                if not serial:
+                    return jsonify({
+                        'success': False,
+                        'message': f'Missing serial number for item {i}.'
+                    })
+                serials.append(serial)
+
             # ตรวจสอบว่ามีอุปกรณ์ชื่อนี้อยู่แล้วหรือไม่
             response = EquipmentTable.scan(
                 FilterExpression=Attr('Name').eq(name) & Attr('Category').eq(category)
@@ -1111,11 +1122,16 @@ def admin_add_equipment():
                     max_item_number = max(max_item_number, item_number)
                 
                 # สร้าง ItemID ใหม่ต่อจากเลขเดิม
-                new_items = generate_item_ids(equipment_id, max_item_number + 1, quantity)
-                if not new_items:
-                    return jsonify({
-                        'success': False,
-                        'message': 'Failed to generate item IDs'
+                new_items = []
+                for i in range(quantity):
+                    item_id = f"{equipment_id}-{(max_item_number + i + 1):03d}"
+                    new_items.append({
+                        'ItemID': item_id,
+                        'Status': 'Available',
+                        'BorrowerID': '-',
+                        'BorrowDate': '-',
+                        'DueDate': '-',
+                        'SerialNumber': serials[i]  # เพิ่ม serial number
                     })
                 
                 # รวม items เก่าและใหม่
@@ -1148,12 +1164,17 @@ def admin_add_equipment():
                         'message': 'Failed to generate equipment ID'
                     })
                 
-                # สร้าง ItemID สำหรับทุกชิ้น
-                items = generate_item_ids(equipment_id, 1, quantity)
-                if not items:
-                    return jsonify({
-                        'success': False,
-                        'message': 'Failed to generate item IDs'
+                # สร้าง items พร้อม serial numbers
+                items = []
+                for i in range(quantity):
+                    item_id = f"{equipment_id}-{(i + 1):03d}"
+                    items.append({
+                        'ItemID': item_id,
+                        'Status': 'Available',
+                        'BorrowerID': '-',
+                        'BorrowDate': '-',
+                        'DueDate': '-',
+                        'SerialNumber': serials[i]  # เพิ่ม serial number
                     })
 
                 # เพิ่มข้อมูลใหม่
@@ -1170,9 +1191,9 @@ def admin_add_equipment():
                 )
 
             redirect_url = url_for('admin_camera') if category == 'Cameras' else \
-                         url_for('admin_accessories') if category == 'Accessories' else \
-                         url_for('admin_lenses') if category == 'Lenses' else \
-                         url_for('admin_equipment')
+                           url_for('admin_accessories') if category == 'Accessories' else \
+                           url_for('admin_lenses') if category == 'Lenses' else \
+                           url_for('admin_equipment')
             
             return jsonify({
                 'success': True,

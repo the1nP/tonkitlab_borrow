@@ -114,12 +114,45 @@
                                            name="quantity" min="1" required>
                                 </div>
 
+                                <!-- Container for dynamic serial number inputs -->
+                                <div id="serial-numbers-container"></div>
+
                                 <div class="text-center">
                                     <button type="submit" class="btn btn-primary btn-lg submit-button">
                                         <i class="fas fa-plus-circle me-2"></i>Add Equipment
                                     </button>
                                 </div>
                             </form>
+
+                            <!-- Add this script block at the end of the form -->
+                            <script>
+                                // Listen for changes in the quantity input
+                                document.getElementById('quantity').addEventListener('input', function() {
+                                    var container = document.getElementById('serial-numbers-container');
+                                    container.innerHTML = ''; // Clear previous inputs
+                                    var qty = parseInt(this.value) || 0;
+                                    
+                                    // Create an input for each serial number field
+                                    for(var i = 1; i <= qty; i++){
+                                        var div = document.createElement('div');
+                                        div.classList.add('mb-3');
+                                        
+                                        var label = document.createElement('label');
+                                        label.classList.add('form-label');
+                                        label.innerText = 'Serial Number for item ' + i;
+                                        
+                                        var input = document.createElement('input');
+                                        input.type = 'text';
+                                        input.name = 'serial_number_' + i;
+                                        input.classList.add('form-control');
+                                        input.required = true;
+                                        
+                                        div.appendChild(label);
+                                        div.appendChild(input);
+                                        container.appendChild(div);
+                                    }
+                                });
+                            </script>
                         </div>
                     </div>
                 </div>
