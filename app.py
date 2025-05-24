@@ -157,7 +157,7 @@ def compress_image(image_file, max_size=(800, 800), quality=85):
     except Exception as e:
         print(f"Error compressing image: {e}")
         return None, None
-@app.route('/', endpoint='/')
+@app.route('/', endpoint='main')
 def main_page():
     # ตัวแปรสำหรับรูปโปรไฟล์
     profile_image_url = get_profile_image_url()
@@ -166,7 +166,7 @@ def main_page():
 
 @app.route('/home', endpoint='home')
 def home_page():
-    return redirect(url_for('/'))
+    return redirect(url_for('main'))
 
 @app.route('/equipment', endpoint='equipment')
 def equipment_page():
