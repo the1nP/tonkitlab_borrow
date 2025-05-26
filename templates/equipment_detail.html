@@ -42,7 +42,11 @@
                     <div class="user-section d-flex align-items-center">
                         <div class="user me-3">
                             <a href="{{ url_for('profile') }}" class="d-flex align-items-center text-decoration-none">
+                            {% if profile_image_url %}
+                                <img src="{{ profile_image_url }}" alt="Profile" class="profile-icon" />
+                            {% else %}
                                 <img src="{{ url_for('static', filename='images/profile.png') }}" alt="Profile" class="profile-icon" />
+                            {% endif %}                                
                                 <span class="username ms-2">{{ session.username }}</span>
                             </a>
                         </div>
@@ -176,12 +180,31 @@
                                 window.location.reload();
                             });
                         } else {
-                            Swal.fire({
-                                title: 'Unable to Borrow',
-                                text: data.message || 'Failed to borrow the equipment. You may need to be a member for this item.',
-                                icon: 'warning',
-                                confirmButtonColor: '#91766E'
-                            });
+                            // ตรวจสอบว่าเป็นข้อความแจ้งเตือนเกี่ยวกับรายการเกินกำหนดหรือไม่
+                            if (data.message && data.message.includes('overdue')) {
+                                Swal.fire({
+                                    title: 'You have overdue items!',
+                                    text: 'You cannot borrow any equipment until you return the overdue items.',
+                                    icon: 'warning',
+                                    confirmButtonColor: '#91766E',
+                                    showCancelButton: true,
+                                    cancelButtonColor: '#28a745',
+                                    confirmButtonText: 'OK',
+                                    cancelButtonText: 'View My Borrowed Items'
+                                }).then((result) => {
+                                    if (result.dismiss === Swal.DismissReason.cancel) {
+                                        // ถ้าผู้ใช้คลิกปุ่ม "View My Borrowed Items"
+                                        window.location.href = "{{ url_for('list') }}";
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Unable to Borrow',
+                                    text: data.message || 'Failed to borrow the equipment. You may need to be a member for this item.',
+                                    icon: 'warning',
+                                    confirmButtonColor: '#91766E'
+                                });
+                            }
                         }
                     })
                     .catch(error => {

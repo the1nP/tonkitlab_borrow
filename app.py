@@ -624,7 +624,71 @@ def logout():
 #     except Exception as e:
 #         print(f"Error: {e}")
 #         return "An error occurred while fetching data from DynamoDB."
-
+def has_overdue_items(user_id):
+    """
+    ตรวจสอบว่าผู้ใช้มีรายการยืมที่เกินกำหนดคืนหรือไม่
+    
+    Args:
+        user_id: รหัสผู้ใช้ที่ต้องการตรวจสอบ
+        
+    Returns:
+        bool: True หากมีรายการเกินกำหนด, False หากไม่มี
+    """
+    try:
+        # ดึงรายการยืมทั้งหมดของผู้ใช้ที่มีสถานะ Approved และ RequestType เป็น borrow
+        response = BorrowReturnRecordsTable.scan(
+            FilterExpression=
+                Attr('user_id').eq(user_id) & 
+                Attr('RequestType').eq('borrow') & 
+                Attr('StatusReq').eq('Approved') &
+                Attr('isApprovedYet').eq('true')
+        )
+        
+        if 'Items' not in response:
+            return False
+            
+        records = response['Items']
+        
+        # ดึงวันที่ปัจจุบัน
+        local_tz = pytz.timezone('Asia/Bangkok')
+        now = datetime.now(local_tz)
+        
+        for record in records:
+            # ตรวจสอบว่ามี record ที่ยังไม่มีการคืนและเลยกำหนดแล้ว
+            item_id = record.get('item_id')
+            if not item_id:
+                continue
+                
+            due_date_str = record.get('due_date')
+            if due_date_str == '-':  # หากไม่มีวันครบกำหนด
+                continue
+                
+            try:
+                due_date = datetime.strptime(due_date_str, '%Y-%m-%d %H:%M:%S')
+                due_date = local_tz.localize(due_date)  # เพิ่ม timezone
+                
+                # ตรวจสอบว่าเลยกำหนดหรือยัง
+                if now > due_date:
+                    # ตรวจสอบว่าได้คืนแล้วหรือไม่
+                    return_response = BorrowReturnRecordsTable.scan(
+                        FilterExpression=
+                            Attr('user_id').eq(user_id) & 
+                            Attr('RequestType').eq('return') & 
+                            Attr('StatusReq').eq('Approved') &
+                            Attr('item_id').eq(item_id)
+                    )
+                    
+                    # ถ้าไม่มีรายการคืนที่ตรงกับ item_id นี้
+                    if 'Items' not in return_response or len(return_response['Items']) == 0:
+                        return True  # พบรายการที่เกินกำหนดและยังไม่คืน
+            except ValueError:
+                continue  # กรณีรูปแบบวันที่ไม่ถูกต้อง
+                
+        return False  # ไม่พบรายการที่เกินกำหนด
+        
+    except Exception as e:
+        print(f"Error checking overdue items: {e}")
+        return False  # กรณีเกิดข้อผิดพลาด ให้ถือว่าไม่มีรายการเกินกำหนด (เพื่อไม่ให้ block user โดยไม่จำเป็น)
 @app.route('/equipment_detail')
 def equipment_detail():
     try:
@@ -644,8 +708,8 @@ def equipment_detail():
         # ตรวจสอบว่ามีฟิลด์ isMemberRequired หรือไม่
         for item in items:
             item['isMemberRequired'] = item.get('isMemberRequired', 'no')  # ค่าเริ่มต้นเป็น 'no' ถ้าไม่มีฟิลด์นี้
-        
-        return render_template('equipment_detail.html', items=items, category=category)
+        profile_image_url = get_profile_image_url()
+        return render_template('equipment_detail.html', items=items, category=category , profile_image_url=profile_image_url)
     except Exception as e:
         print(f"Error: {e}")
         flash('An error occurred while fetching data from DynamoDB.', 'error')
@@ -673,12 +737,18 @@ def borrow_equipment(equipment_id):
         user_response = cognito.get_user(AccessToken=access_token)
         user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
         club_member = user_attributes.get('custom:club_member', 'no')
+        username = session.get('username')
 
         is_member_required = equipment_item.get('isMemberRequired', 'no')
         if is_member_required == 'yes' and club_member != 'yes':
             return jsonify(success=False, message="This equipment is restricted to members only"), 403
 
-        # Step 3: Create borrow request record
+        # Step 3: Check if user has overdue items
+        if has_overdue_items(username):
+            return jsonify(success=False, 
+                         message="You have overdue items. Please return them before borrowing new equipment"), 403
+
+        # Step 4: Create borrow request record
         local_tz = pytz.timezone('Asia/Bangkok')
         now = datetime.now(local_tz)
         record_id = generate_record_id()
@@ -688,7 +758,7 @@ def borrow_equipment(equipment_id):
         BorrowReturnRecordsTable.put_item(
             Item={
                 'record_id': record_id,
-                'user_id': session.get('username'),
+                'user_id': username,
                 'equipment_id': equipment_id,
                 'equipment_name': equipment_item['Name'],
                 'RequestType': 'borrow',
@@ -703,8 +773,7 @@ def borrow_equipment(equipment_id):
     except Exception as e:
         print(f"Error: {e}")
         return jsonify(success=False, message="An unexpected error occurred"), 500
-
-# @app.route('/details_lenses')
+    # @app.route('/details_lenses')
 # def details_lenses():
 #     try:
 #         response = EquipmentTable.scan(
