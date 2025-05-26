@@ -84,6 +84,7 @@
                                         <th scope="col">Request Date</th>
                                         <th scope="col">Equipment</th>
                                         <th scope="col">Due Date</th>
+                                        <th scope="col">Days Remaining</th> <!-- เพิ่มคอลัมน์นี้ -->
                                         <th scope="col">Return Date</th>
                                         <th scope="col">Request Type</th>
                                         <th scope="col">Status</th>
@@ -107,7 +108,50 @@
                                                 <span class="date-info">{{ record.due_date }}</span>
                                             {% endif %}
                                         </td>
-                                        <td>{{ record.get('return_date', '-') }}</td>
+                                        <!-- เพิ่มคอลัมน์แสดงจำนวนวันที่เหลือ -->
+                                        <td>
+                                            {% if record.RequestType == 'borrow' and record.StatusReq == 'Approved' and record.due_date != '-' %}
+                                                <!-- ตรวจสอบว่ามีการคืนแล้วหรือไม่ -->
+                                                {% if not record.get('returned', False) and not record.get('return_date') %}
+                                                    <span id="days-remaining-{{ loop.index }}" class="days-remaining">
+                                                        <script>
+                                                            document.addEventListener('DOMContentLoaded', function() {
+                                                                const dueDate = new Date("{{ record.due_date }}");
+                                                                const today = new Date();
+                                                                
+                                                                // ตั้งเวลาของ today ให้เป็น 00:00:00 เพื่อเปรียบเทียบเฉพาะวัน
+                                                                today.setHours(0, 0, 0, 0);
+                                                                
+                                                                // คำนวณจำนวนวันที่เหลือ
+                                                                const diffTime = dueDate - today;
+                                                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                                
+                                                                const daysElement = document.getElementById("days-remaining-{{ loop.index }}");
+                                                                
+                                                                if (diffDays > 0) {
+                                                                    // ยังเหลือเวลา
+                                                                    daysElement.innerHTML = diffDays + " day" + (diffDays > 1 ? "s" : "");
+                                                                    daysElement.classList.add("text-success");
+                                                                } else if (diffDays === 0) {
+                                                                    // วันสุดท้าย
+                                                                    daysElement.innerHTML = "Today!";
+                                                                    daysElement.classList.add("text-warning");
+                                                                } else {
+                                                                    // เกินกำหนดแล้ว
+                                                                    daysElement.innerHTML = Math.abs(diffDays) + " day" + (Math.abs(diffDays) > 1 ? "s" : "") + " overdue!";
+                                                                    daysElement.classList.add("text-danger", "fw-bold");
+                                                                }
+                                                            });
+                                                        </script>
+                                                        Calculating...
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">Returned</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>                                        <td>{{ record.get('return_date', '-') }}</td>
                                         <td>
                                             <span class="badge {{ 'bg-primary' if record.RequestType == 'borrow' else 'bg-info' }}">
                                                 {{ record.RequestType }}
@@ -135,8 +179,7 @@
                                         </td>
                                     </tr>
                                     {% endfor %}
-                                </tbody>
-                            </table>
+                                </tbody>                            </table>
                         </div>
                         
                         {% if not records %}
