@@ -34,6 +34,8 @@ def update_aws_credentials():
     while choice not in ["1", "2"]:
         choice = input("Enter your choice (1 or 2): ").strip()
     
+    credentials_updated = False
+    
     if choice == "1":
         # เขียนไฟล์ไปที่ user ปัจจุบัน
         credentials_path = Path.home() / ".aws" / "credentials"
@@ -45,6 +47,7 @@ def update_aws_credentials():
                 f.write(f"{key} = {credentials_dict[key]}\n")
         
         print(f"✅ AWS credentials updated at {credentials_path}")
+        credentials_updated = True
         
     else:
         # เขียนไฟล์ไปที่ root user
@@ -77,6 +80,7 @@ def update_aws_credentials():
             temp_file.unlink()
             
             print("✅ AWS credentials updated at /root/.aws/credentials")
+            credentials_updated = True
             
         except subprocess.CalledProcessError as e:
             print(f"❌ Error: {e}")
@@ -94,6 +98,19 @@ def update_aws_credentials():
                         f.write(f"{key} = {credentials_dict[key]}\n")
                 
                 print(f"✅ AWS credentials updated at {credentials_path}")
+                credentials_updated = True
+    
+    # ถ้าอัปเดต credentials สำเร็จ ถามว่าต้องการรีสตาร์ท tooltrack service หรือไม่
+    if credentials_updated:
+        restart_service = input("\nWould you like to restart the tooltrack service to apply new credentials? (y/n): ").strip().lower()
+        if restart_service in ["y", "yes"]:
+            try:
+                print("Restarting tooltrack service...")
+                subprocess.run(["sudo", "systemctl", "restart", "tooltrack"], check=True)
+                print("✅ tooltrack service restarted successfully.")
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Error restarting service: {e}")
+                print("You may need to restart the service manually: sudo systemctl restart tooltrack")
 
 if __name__ == "__main__":
     update_aws_credentials()
