@@ -1259,10 +1259,7 @@ def admin_add_equipment():
                     }
                 )
 
-            redirect_url = url_for('admin_camera') if category == 'Cameras' else \
-                           url_for('admin_accessories') if category == 'Accessories' else \
-                           url_for('admin_lenses') if category == 'Lenses' else \
-                           url_for('admin_equipment')
+            redirect_url = url_for('admin_equipment')
             
             return jsonify({
                 'success': True,
