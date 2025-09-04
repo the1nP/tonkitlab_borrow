@@ -1,21 +1,64 @@
 # Python virtual environment
 venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
 # ไฟล์ที่ Python สร้างขึ้น
 __pycache__/
 *.py[cod]
 *.pyo
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # ไฟล์ของ IDE เช่น VSCode, PyCharm
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # ไฟล์ log หรืออื่นๆ
 *.log
+logs/
+volume/
 
-# ไฟล์ dependency (เลือกได้ว่าจะใส่หรือไม่)
+# ไฟล์ dependency และ environment
 *.env
+.env.local
+.env.*.local
+.env.aws.local
+.env.localstack.local
+
+# AWS credentials (never commit these)
+.aws/
+credentials.py
+credentials_envi.py
+
+# Docker และ LocalStack
+localstack-data/
 
 # ระบบปฏิบัติการ
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: tonkitlab-app-aws
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env.aws
+    environment:
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    volumes:
+      - ./static:/app/static:ro
+      - ./templates:/app/templates:ro
+      - ./app.py:/app/app.py:ro
+      - ./credentials.py:/app/credentials.py:ro
+      - ./credentials_envi.py:/app/credentials_envi.py:ro
+      # Mount AWS credentials if using file-based auth
+      - ~/.aws:/home/appuser/.aws:ro
+    networks:
+      - tonkitlab-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  tonkitlab-network:
+    driver: bridge

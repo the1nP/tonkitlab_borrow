@@ -1,0 +1,268 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'TonkitLab Borrow - AWS Resources for LocalStack Pro'
+
+Parameters:
+  AppName:
+    Type: String
+    Default: 'tonkitlab-borrow'
+    Description: 'Application name'
+  
+  Environment:
+    Type: String
+    Default: 'development'
+    Description: 'Environment name'
+
+Resources:
+  # S3 Buckets
+  ProfileImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AppName}-profile-images-${Environment}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  EquipmentImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AppName}-equipment-images-${Environment}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+
+  # DynamoDB Tables
+  EquipmentTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AppName}-Equipment-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: equipment_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: equipment_id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Application
+          Value: !Ref AppName
+        - Key: Environment
+          Value: !Ref Environment
+
+  BorrowReturnRecordsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AppName}-BorrowReturnRecords-${Environment}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: record_id
+          AttributeType: S
+        - AttributeName: equipment_id
+          AttributeType: S
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: record_id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: equipment-index
+          KeySchema:
+            - AttributeName: equipment_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: user-index
+          KeySchema:
+            - AttributeName: username
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Application
+          Value: !Ref AppName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # Cognito User Pool
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub '${AppName}-user-pool-${Environment}'
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Mutable: true
+          Required: true
+        - Name: profile_image
+          AttributeDataType: String
+          Mutable: true
+          Required: false
+      UserPoolTags:
+        Application: !Ref AppName
+        Environment: !Ref Environment
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref UserPool
+      ClientName: !Sub '${AppName}-client-${Environment}'
+      GenerateSecret: true
+      SupportedIdentityProviders:
+        - COGNITO
+      CallbackURLs:
+        - http://localhost:5000/callback
+      LogoutURLs:
+        - http://localhost:5000/logout
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+
+  # Secrets Manager
+  AppSecrets:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub '${AppName}/config/${Environment}'
+      Description: 'Application configuration secrets'
+      SecretString: !Sub |
+        {
+          "FLASK_SECRET_KEY": "localstack-pro-development-secret-key",
+          "USER_POOL_ID": "${UserPool}",
+          "APP_CLIENT_ID": "${UserPoolClient}",
+          "CLIENT_SECRET": "generated-by-cognito"
+        }
+      Tags:
+        - Key: Application
+          Value: !Ref AppName
+        - Key: Environment
+          Value: !Ref Environment
+
+  # IAM Role for Application
+  AppRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${AppName}-app-role-${Environment}'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonCognitoPowerUser
+        - arn:aws:iam::aws:policy/SecretsManagerReadWrite
+
+  # Lambda function for processing (example)
+  ProcessingFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${AppName}-processor-${Environment}'
+      Runtime: python3.9
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          
+          def handler(event, context):
+              print(f"Processing event: {json.dumps(event)}")
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps({'message': 'Event processed successfully'})
+              }
+      Environment:
+        Variables:
+          EQUIPMENT_TABLE: !Ref EquipmentTable
+          RECORDS_TABLE: !Ref BorrowReturnRecordsTable
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+
+Outputs:
+  UserPoolId:
+    Description: 'Cognito User Pool ID'
+    Value: !Ref UserPool
+    Export:
+      Name: !Sub '${AppName}-UserPoolId-${Environment}'
+
+  UserPoolClientId:
+    Description: 'Cognito User Pool Client ID'
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub '${AppName}-UserPoolClientId-${Environment}'
+
+  EquipmentTableName:
+    Description: 'DynamoDB Equipment Table Name'
+    Value: !Ref EquipmentTable
+    Export:
+      Name: !Sub '${AppName}-EquipmentTable-${Environment}'
+
+  BorrowReturnRecordsTableName:
+    Description: 'DynamoDB BorrowReturnRecords Table Name'
+    Value: !Ref BorrowReturnRecordsTable
+    Export:
+      Name: !Sub '${AppName}-BorrowReturnRecordsTable-${Environment}'
+
+  ProfileImagesBucketName:
+    Description: 'S3 Profile Images Bucket Name'
+    Value: !Ref ProfileImagesBucket
+    Export:
+      Name: !Sub '${AppName}-ProfileImagesBucket-${Environment}'
+
+  SecretsManagerArn:
+    Description: 'Secrets Manager Secret ARN'
+    Value: !Ref AppSecrets
+    Export:
+      Name: !Sub '${AppName}-SecretsArn-${Environment}'

@@ -16,18 +16,61 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 
 app = Flask(__name__)
-def get_secrets():
-    secret_name = "equipment-app/config"
-    region_name = "us-east-1"
+
+def get_aws_config():
+    """Get AWS configuration based on environment"""
+    config = {}
     
-    # สร้าง Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(
-        service_name='secretsmanager',
-        region_name=region_name
-    )
+    # Check if we're using LocalStack
+    endpoint_url = os.getenv('AWS_ENDPOINT_URL')
+    region = os.getenv('AWS_REGION', 'us-east-1')
+    
+    if endpoint_url:
+        # LocalStack configuration
+        config['endpoint_url'] = endpoint_url
+        config['region_name'] = region
+        config['aws_access_key_id'] = os.getenv('AWS_ACCESS_KEY_ID', 'test')
+        config['aws_secret_access_key'] = os.getenv('AWS_SECRET_ACCESS_KEY', 'test')
+        print(f"Using LocalStack at {endpoint_url}")
+    else:
+        # Real AWS configuration
+        config['region_name'] = region
+        # AWS credentials will be picked up from environment or IAM role
+        print("Using real AWS services")
+    
+    return config
+
+def get_secrets():
+    """Get secrets from environment variables or AWS Secrets Manager"""
+    
+    # Try to get from environment variables first (for LocalStack)
+    if os.getenv('FLASK_SECRET_KEY'):
+        return {
+            'FLASK_SECRET_KEY': os.getenv('FLASK_SECRET_KEY'),
+            'USER_POOL_ID': os.getenv('USER_POOL_ID'),
+            'APP_CLIENT_ID': os.getenv('APP_CLIENT_ID'),
+            'CLIENT_SECRET': os.getenv('CLIENT_SECRET')
+        }
+    
+    # Fallback to AWS Secrets Manager
+    secret_name = os.getenv('SECRET_NAME', 'equipment-app/config')
+    aws_config = get_aws_config()
     
     try:
+        # สร้าง Secrets Manager client
+        session = boto3.session.Session()
+        client_kwargs = {
+            'service_name': 'secretsmanager',
+            'region_name': aws_config['region_name']
+        }
+        
+        if 'endpoint_url' in aws_config:
+            client_kwargs['endpoint_url'] = aws_config['endpoint_url']
+            client_kwargs['aws_access_key_id'] = aws_config['aws_access_key_id']
+            client_kwargs['aws_secret_access_key'] = aws_config['aws_secret_access_key']
+        
+        client = session.client(**client_kwargs)
+        
         # ดึงค่า Secret
         get_secret_value_response = client.get_secret_value(
             SecretId=secret_name
@@ -37,27 +80,111 @@ def get_secrets():
             return json.loads(secret)
     except ClientError as e:
         print(f"Error retrieving secrets: {e}")
+        # Return default values for development
+        return {
+            'FLASK_SECRET_KEY': 'development-secret-key',
+            'USER_POOL_ID': 'us-east-1_localstack',
+            'APP_CLIENT_ID': 'localstack-client',
+            'CLIENT_SECRET': 'localstack-secret'
+        }
 
+
+# Get AWS configuration
+aws_config = get_aws_config()
 
 # ดึงค่า Secrets
 secrets = get_secrets()
 
 # ตั้งค่า Flask secret key
 app.secret_key = secrets.get('FLASK_SECRET_KEY')
+
 # AWS Cognito Configuration
 USER_POOL_ID = secrets.get('USER_POOL_ID')
 APP_CLIENT_ID = secrets.get('APP_CLIENT_ID')
 CLIENT_SECRET = secrets.get('CLIENT_SECRET')
-cognito = boto3.client('cognito-idp', region_name='us-east-1')
+
+# Create AWS clients with proper configuration
+cognito_kwargs = {
+    'service_name': 'cognito-idp',
+    'region_name': aws_config['region_name']
+}
+if 'endpoint_url' in aws_config:
+    cognito_kwargs['endpoint_url'] = aws_config['endpoint_url']
+    cognito_kwargs['aws_access_key_id'] = aws_config['aws_access_key_id']
+    cognito_kwargs['aws_secret_access_key'] = aws_config['aws_secret_access_key']
+
+cognito = boto3.client(**cognito_kwargs)
 
 # DynamoDB Configuration
-dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
-EquipmentTable = dynamodb.Table('Equipment')
-BorrowReturnRecordsTable = dynamodb.Table('BorrowReturnRecords')
+dynamodb_kwargs = {
+    'service_name': 'dynamodb',
+    'region_name': aws_config['region_name']
+}
+if 'endpoint_url' in aws_config:
+    dynamodb_kwargs['endpoint_url'] = aws_config['endpoint_url']
+    dynamodb_kwargs['aws_access_key_id'] = aws_config['aws_access_key_id']
+    dynamodb_kwargs['aws_secret_access_key'] = aws_config['aws_secret_access_key']
+
+dynamodb = boto3.resource(**dynamodb_kwargs)
+EquipmentTable = dynamodb.Table(os.getenv('EQUIPMENT_TABLE', 'Equipment'))
+BorrowReturnRecordsTable = dynamodb.Table(os.getenv('BORROW_RETURN_RECORDS_TABLE', 'BorrowReturnRecords'))
+
+def get_s3_client():
+    """Create S3 client with proper configuration"""
+    s3_kwargs = {
+        'service_name': 's3',
+        'region_name': aws_config['region_name']
+    }
+    if 'endpoint_url' in aws_config:
+        s3_kwargs['endpoint_url'] = aws_config['endpoint_url']
+        s3_kwargs['aws_access_key_id'] = aws_config['aws_access_key_id']
+        s3_kwargs['aws_secret_access_key'] = aws_config['aws_secret_access_key']
+    
+    return boto3.client(**s3_kwargs)
+
+def is_localstack_environment():
+    """Check if running in LocalStack environment"""
+    return os.getenv('AWS_ENDPOINT_URL') is not None
+
+def get_hardcoded_users():
+    """Get hardcoded users for LocalStack bypass"""
+    return {
+        'testuser': {
+            'password': 'password',
+            'email': 'test@example.com',
+            'name': 'Test User',
+            'role': 'user',
+            'faculty': 'Engineering',
+            'student_id': 'TEST001',
+            'phone': '+66812345678',
+            'club_member': 'Yes',
+            'dob': '2000-01-01'
+        },
+        'admin': {
+            'password': 'admin',
+            'email': 'admin@example.com', 
+            'name': 'Admin User',
+            'role': 'admin',
+            'faculty': 'Administration',
+            'student_id': 'ADMIN001',
+            'phone': '+66812345679',
+            'club_member': 'Yes',
+            'dob': '1990-01-01'
+        }
+    }
 
 def validate_token():
     """Validate the access token in the session"""
     if 'username' in session and 'access_token' in session:
+        # Check if we're in LocalStack environment and using fake token
+        if is_localstack_environment() and session['access_token'].startswith('fake_token_'):
+            # Fake token validation - always valid if format is correct
+            if 'user_data' in session:
+                return True
+            else:
+                session.clear()
+                return False
+        
         try:
             # Try to use the token to get user info from Cognito
             cognito.get_user(AccessToken=session['access_token'])
@@ -84,14 +211,19 @@ def get_profile_image_url():
     profile_image_url = None
     if 'username' in session and 'access_token' in session:
         try:
+            # Check if we're in LocalStack environment using hardcoded users
+            if is_localstack_environment() and session['access_token'].startswith('fake_token_'):
+                # For hardcoded users, return a default profile image or None
+                return None
+            
             access_token = session['access_token']
             
             user_response = cognito.get_user(AccessToken=access_token)
             user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
             
             if 'custom:profile_image' in user_attributes:
-                s3 = boto3.client('s3', region_name='us-east-1')
-                bucket_name = 'tooltrack-profilepic'
+                s3 = get_s3_client()
+                bucket_name = os.getenv('S3_BUCKET_NAME', 'tooltrack-profilepic')
                 profile_key = user_attributes['custom:profile_image']
                 
                 profile_image_url = s3.generate_presigned_url('get_object',
@@ -209,8 +341,8 @@ def update_profile_image():
             return jsonify({'success': False, 'message': 'Failed to compress image'}), 500
         
         # เตรียมข้อมูลสำหรับการอัปโหลดไปยัง S3
-        s3 = boto3.client('s3', region_name='us-east-1')
-        bucket_name = 'tooltrack-profilepic'
+        s3 = get_s3_client()
+        bucket_name = os.getenv('S3_BUCKET_NAME', 'tooltrack-profilepic')
         
         # สร้างชื่อไฟล์แบบไม่ซ้ำกัน
         username = session['username']
@@ -270,45 +402,69 @@ def profile_page():
             flash('You need to log in first.', 'error')
             return redirect(url_for('login'))
 
-        # สร้าง S3 client
-        s3 = boto3.client('s3', region_name='us-east-1')
-        bucket_name = 'tooltrack-profilepic'  # ใช้ชื่อ bucket ของคุณ
+        # Handle different authentication methods
+        if is_localstack_environment() and access_token.startswith('fake_token_'):
+            # For hardcoded users in LocalStack
+            user_data = session.get('user_data', {})
+            
+            # Use hardcoded user data
+            user_info = {
+                'username': username,
+                'email': user_data.get('email'),
+                'fullname': user_data.get('name'),
+                'phone': user_data.get('phone'),
+                'faculty': user_data.get('faculty'),
+                'student_id': user_data.get('student_id'),
+                'club_member': user_data.get('club_member'),
+                'dob': user_data.get('dob'),
+                'profile_image': url_for('static', filename='images/profile.png')  # Default image
+            }
+            
+            # Check role for hardcoded users
+            role = user_data.get('role')
+        else:
+            # For real Cognito users
+            # สร้าง S3 client
+            s3 = get_s3_client()
+            bucket_name = os.getenv('S3_BUCKET_NAME', 'tooltrack-profilepic')
 
-        # ดึงข้อมูลผู้ใช้จาก Cognito
-        response = cognito.get_user(AccessToken=access_token)
-        user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
-        
-        # สร้าง presigned URL สำหรับรูปโปรไฟล์
-        profile_image_url = None
-        try:
-            # ตรวจสอบว่ามี custom attribute สำหรับรูปโปรไฟล์หรือไม่
-            if 'custom:profile_image' in user_attributes:
-                profile_key = user_attributes['custom:profile_image']
-                profile_image_url = s3.generate_presigned_url('get_object',
-                    Params={'Bucket': bucket_name, 'Key': profile_key},
-                    ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
-                )
-        except Exception as e:
-            print(f"Error getting profile image: {e}")
-        
-        # ถ้าไม่มีรูป ให้ใช้รูปเริ่มต้น
-        if not profile_image_url:
-            profile_image_url = url_for('static', filename='images/profile.png')
+            # ดึงข้อมูลผู้ใช้จาก Cognito
+            response = cognito.get_user(AccessToken=access_token)
+            user_attributes = {attr['Name']: attr['Value'] for attr in response['UserAttributes']}
+            
+            # สร้าง presigned URL สำหรับรูปโปรไฟล์
+            profile_image_url = None
+            try:
+                # ตรวจสอบว่ามี custom attribute สำหรับรูปโปรไฟล์หรือไม่
+                if 'custom:profile_image' in user_attributes:
+                    profile_key = user_attributes['custom:profile_image']
+                    profile_image_url = s3.generate_presigned_url('get_object',
+                        Params={'Bucket': bucket_name, 'Key': profile_key},
+                        ExpiresIn=3600  # URL หมดอายุใน 1 ชั่วโมง
+                    )
+            except Exception as e:
+                print(f"Error getting profile image: {e}")
+            
+            # ถ้าไม่มีรูป ให้ใช้รูปเริ่มต้น
+            if not profile_image_url:
+                profile_image_url = url_for('static', filename='images/profile.png')
 
-        user_info = {
-            'username': username,
-            'email': user_attributes.get('email'),
-            'fullname': user_attributes.get('name'),
-            'phone': user_attributes.get('phone_number'),
-            'faculty': user_attributes.get('custom:faculty'),
-            'student_id': user_attributes.get('custom:student_id'),
-            'club_member': user_attributes.get('custom:club_member'),
-            'dob': user_attributes.get('custom:dob'),
-            'profile_image': profile_image_url
-        }
+            user_info = {
+                'username': username,
+                'email': user_attributes.get('email'),
+                'fullname': user_attributes.get('name'),
+                'phone': user_attributes.get('phone_number'),
+                'faculty': user_attributes.get('custom:faculty'),
+                'student_id': user_attributes.get('custom:student_id'),
+                'club_member': user_attributes.get('custom:club_member'),
+                'dob': user_attributes.get('custom:dob'),
+                'profile_image': profile_image_url
+            }
+            
+            # Get role from Cognito attributes
+            role = user_attributes.get('custom:role')
 
         # ตรวจสอบว่าเป็นแอดมินหรือไม่
-        role = user_attributes.get('custom:role')
         if role == 'admin':
             return render_template('admin_req.html', user_info=user_info)
         else:
@@ -334,6 +490,32 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        
+        # Check if we're in LocalStack environment and use hardcoded users
+        if is_localstack_environment():
+            hardcoded_users = get_hardcoded_users()
+            
+            if username in hardcoded_users and hardcoded_users[username]['password'] == password:
+                # Hardcoded login success
+                user_data = hardcoded_users[username]
+                
+                # Set session data
+                session['username'] = username
+                session['access_token'] = f'fake_token_{username}_{int(datetime.now().timestamp())}'
+                session['user_data'] = user_data
+                
+                # Check role and redirect accordingly
+                if user_data['role'] == 'admin':
+                    flash('Login successful as admin! (LocalStack Mode)', 'success')
+                    return redirect(url_for('admin_req'))
+                else:
+                    flash('Login successful! (LocalStack Mode)', 'success')
+                    return redirect(url_for('home'))
+            else:
+                flash('Invalid username or password', 'error')
+                return redirect(url_for('login'))
+        
+        # Original Cognito authentication for real AWS
         secret_hash = get_secret_hash(username, APP_CLIENT_ID, CLIENT_SECRET)
 
         try:
@@ -527,8 +709,8 @@ def verify_otp():
         if temp_profile_pic:
             try:
                 # สร้าง S3 client
-                s3 = boto3.client('s3', region_name='us-east-1')
-                bucket_name = 'tooltrack-profilepic'
+                s3 = get_s3_client()
+                bucket_name = os.getenv('S3_BUCKET_NAME', 'tooltrack-profilepic')
                 
                 # บีบอัดรูปภาพ
                 compressed_img, content_type = compress_image(
@@ -734,10 +916,18 @@ def borrow_equipment(equipment_id):
         if not access_token:
             return jsonify(success=False, message="User not logged in"), 401
 
-        user_response = cognito.get_user(AccessToken=access_token)
-        user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
-        club_member = user_attributes.get('custom:club_member', 'no')
         username = session.get('username')
+        
+        # Handle different authentication methods
+        if is_localstack_environment() and access_token.startswith('fake_token_'):
+            # For hardcoded users in LocalStack
+            user_data = session.get('user_data', {})
+            club_member = user_data.get('club_member', 'no')
+        else:
+            # For real Cognito users
+            user_response = cognito.get_user(AccessToken=access_token)
+            user_attributes = {attr['Name']: attr['Value'] for attr in user_response['UserAttributes']}
+            club_member = user_attributes.get('custom:club_member', 'no')
 
         is_member_required = equipment_item.get('isMemberRequired', 'no')
         if is_member_required == 'yes' and club_member != 'yes':
@@ -1610,5 +1800,59 @@ def item_history(equipment_id, item_id):
         print(f"Error in item_history: {e}")
         return jsonify(success=False, message="Failed to get item history")
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Docker"""
+    try:
+        # Basic health check - just return OK if the app is running
+        return jsonify({
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'environment': 'localstack' if os.getenv('AWS_ENDPOINT_URL') else 'aws'
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
+
+@app.route('/localstack-info')
+def localstack_info():
+    """Show LocalStack test users info - only available in LocalStack environment"""
+    if not is_localstack_environment():
+        return jsonify({
+            'error': 'This endpoint is only available in LocalStack environment'
+        }), 403
+    
+    test_users_info = [
+        {
+            'username': 'testuser',
+            'password': 'password',
+            'email': 'test@example.com',
+            'role': 'user',
+            'description': 'Regular user for testing'
+        },
+        {
+            'username': 'admin',
+            'password': 'admin', 
+            'email': 'admin@example.com',
+            'role': 'admin',
+            'description': 'Admin user for testing'
+        }
+    ]
+    
+    return jsonify({
+        'environment': 'LocalStack',
+        'mode': 'Hard-coded users (No Cognito)',
+        'message': 'These users are hard-coded for easy testing in LocalStack',
+        'test_users': test_users_info,
+        'login_url': '/login',
+        'note': 'Use these credentials to login without registration or OTP',
+        'updated_time': '2025-09-04 19:15:00'  # เพิ่ม timestamp เพื่อเช็คว่า file update แล้ว
+    })
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=2004, debug=True)
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug)
